@@ -1,200 +1,294 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tune</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pulse Music</title>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@300;400;500&display=swap');
+:root {
+  --bg:#0b0b0d;
+  --card:#151518;
+  --card2:#1d1d22;
+  --text:#ffffff;
+  --muted:#9a9aa3;
+  --accent:#1db954;
+}
 
 * { margin:0; padding:0; box-sizing:border-box; }
 
-:root {
-  --bg:#050506;
-  --surface:#111114;
-  --surface2:#1a1a1d;
-  --border:#2a2a2e;
-  --accent:#ffffff;
-  --text:#f5f5f5;
-  --muted:#8a8a8f;
-}
-
 body {
-  background: radial-gradient(circle at top, #121216, var(--bg));
-  color: var(--text);
-  font-family: 'DM Mono', monospace;
+  font-family: -apple-system, Arial;
+  background: radial-gradient(circle at top, #1a1a20, var(--bg));
+  color:var(--text);
   display:flex;
   flex-direction:column;
   align-items:center;
-  padding:20px;
+  padding:18px;
 }
 
 header {
   width:100%;
-  max-width:480px;
+  max-width:520px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:20px;
+  margin-bottom:12px;
 }
 
 .logo {
-  font-family:'DM Serif Display', serif;
-  font-size:26px;
-  color:var(--accent);
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:0.5px;
 }
 
-button {
-  cursor:pointer;
-}
-
-.add-btn {
+.add {
   background:var(--accent);
   color:#000;
   border:none;
   padding:8px 14px;
   border-radius:20px;
-  font-size:12px;
 }
 
 .player {
   width:100%;
-  max-width:480px;
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:16px;
+  max-width:520px;
+  background:linear-gradient(145deg,#16161a,#101014);
+  border-radius:18px;
   padding:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.4);
 }
 
-input[type=file] {
-  margin-bottom:10px;
-  color:white;
-}
-
-audio {
+/* ARTWORK */
+.art {
   width:100%;
-  margin-top:10px;
+  aspect-ratio:1;
+  border-radius:14px;
+  background:linear-gradient(135deg,#2a2a2f,#111);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:42px;
+  font-weight:700;
+  margin-bottom:12px;
+  position:relative;
+  overflow:hidden;
 }
 
+.art::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  background:radial-gradient(circle at center, rgba(255,255,255,0.08), transparent 60%);
+  animation:pulse 3s infinite;
+}
+
+@keyframes pulse {
+  0%,100% { opacity:0.4; }
+  50% { opacity:0.8; }
+}
+
+/* TITLE */
+.title {
+  font-size:18px;
+  margin-bottom:4px;
+}
+.sub {
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:10px;
+}
+
+/* CONTROLS */
 .controls {
   display:flex;
   justify-content:center;
-  gap:15px;
+  gap:14px;
   margin-top:10px;
 }
 
-.controls button {
-  background:var(--surface2);
+button {
   border:none;
-  color:var(--text);
+  cursor:pointer;
+}
+
+.play {
+  width:54px;
+  height:54px;
+  border-radius:50%;
+  background:var(--accent);
+  color:#000;
+  font-size:18px;
+  transition:transform 0.2s;
+}
+
+.play:active { transform:scale(0.95); }
+
+.ctrl {
+  background:#222;
+  color:white;
   padding:10px 12px;
   border-radius:10px;
 }
 
-.play {
-  background:var(--accent);
-  color:#000;
-}
-
-.queue {
-  margin-top:15px;
+/* LIST */
+.list {
+  width:100%;
+  max-width:520px;
+  margin-top:14px;
 }
 
 .item {
-  padding:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px;
   margin:6px 0;
-  background:var(--surface2);
-  border-radius:10px;
-  cursor:pointer;
-  font-size:13px;
+  background:var(--card);
+  border-radius:12px;
+  transition:0.2s;
+}
+
+.item:hover {
+  background:var(--card2);
 }
 
 .item.active {
-  background:var(--accent);
-  color:#000;
+  border-left:3px solid var(--accent);
 }
+
+.small {
+  font-size:12px;
+  color:var(--muted);
+}
+
+.delete {
+  background:none;
+  color:#888;
+  border:none;
+  cursor:pointer;
+}
+.delete:hover { color:#ff4d4d; }
+
+/* hidden input */
+input { display:none; }
 </style>
 </head>
 
 <body>
 
 <header>
-  <div class="logo">tune.</div>
-  <button class="add-btn" onclick="file.click()">Add</button>
+  <div class="logo">Pulse</div>
+  <button class="add" onclick="file.click()">Add Music</button>
 </header>
 
 <div class="player">
 
-<input id="file" type="file" accept="audio/*,video/mp4,.mp3,.m4a,.wav,.aac" multiple>
+<div class="art" id="art">♫</div>
+
+<div class="title" id="title">No song selected</div>
+<div class="sub" id="sub">Upload music to start</div>
 
 <audio id="audio"></audio>
 
 <div class="controls">
-  <button onclick="prev()">⏮</button>
-  <button class="play" onclick="toggle()">▶</button>
-  <button onclick="next()">⏭</button>
+  <button class="ctrl" onclick="prev()">⏮</button>
+
+  <button class="play" onclick="toggle()" id="playBtn">▶</button>
+
+  <button class="ctrl" onclick="next()">⏭</button>
 </div>
 
-<div class="queue" id="queue"></div>
-
 </div>
+
+<div class="list" id="list"></div>
+
+<input type="file" id="file" accept="audio/*,video/mp4,.mp3,.m4a,.wav,.aac" multiple>
 
 <script>
-const file = document.getElementById('file');
-const audio = document.getElementById('audio');
-const queue = document.getElementById('queue');
+const file = document.getElementById("file");
+const audio = document.getElementById("audio");
+const list = document.getElementById("list");
+const playBtn = document.getElementById("playBtn");
+const title = document.getElementById("title");
+const sub = document.getElementById("sub");
+const art = document.getElementById("art");
 
-let tracks = [];
+let tracks = JSON.parse(localStorage.getItem("tracks")||"[]");
 let current = 0;
+let playing = false;
 
-function render() {
-  queue.innerHTML = "";
+/* ---------- SAVE ---------- */
+function save(){
+  localStorage.setItem("tracks", JSON.stringify(tracks));
+}
+
+/* ---------- ART GENERATION ---------- */
+function setArt(name){
+  const letters = name ? name.split(" ").map(w=>w[0]).slice(0,2).join("") : "♫";
+  art.textContent = letters.toUpperCase();
+}
+
+/* ---------- RENDER ---------- */
+function render(){
+  list.innerHTML="";
 
   tracks.forEach((t,i)=>{
-    let div = document.createElement("div");
-    div.className = "item" + (i===current?" active":"");
-    div.textContent = t.name;
-    div.onclick = ()=>play(i);
-    queue.appendChild(div);
+    const div=document.createElement("div");
+    div.className="item"+(i===current?" active":"");
+
+    div.innerHTML=`
+      <div onclick="play(${i})">
+        <div>${t.name}</div>
+        <div class="small">Local file</div>
+      </div>
+      <button class="delete" onclick="removeSong(${i})">🗑</button>
+    `;
+
+    list.appendChild(div);
   });
 }
 
-file.addEventListener("change",(e)=>{
-  const files = [...e.target.files];
-
-  files.forEach(f=>{
-    const url = URL.createObjectURL(f);
-    tracks.push({name:f.name,url});
-  });
-
-  render();
-  play(0);
-});
-
+/* ---------- PLAY ---------- */
 function play(i){
   if(!tracks.length) return;
 
   current=i;
+  const t=tracks[i];
 
-  audio.pause();
-  audio.src = tracks[i].url;
-  audio.load();
+  audio.src=t.url;
+  audio.play();
 
-  const p = audio.play();
-  if(p) p.catch(()=>{});
+  playing=true;
+  updateUI();
+
+  setArt(t.name);
+  title.textContent=t.name;
+  sub.textContent="Now playing";
 
   render();
 }
 
+/* ---------- TOGGLE ---------- */
 function toggle(){
-  if(audio.paused){
-    audio.play();
-  } else {
+  if(!tracks.length) return;
+
+  if(playing){
     audio.pause();
+    playing=false;
+  }else{
+    audio.play();
+    playing=true;
   }
+  updateUI();
 }
 
+/* ---------- UI BUTTON ---------- */
+function updateUI(){
+  playBtn.textContent = playing ? "⏸" : "▶";
+}
+
+/* ---------- NEXT / PREV ---------- */
 function next(){
   if(!tracks.length) return;
   play((current+1)%tracks.length);
@@ -205,7 +299,40 @@ function prev(){
   play((current-1+tracks.length)%tracks.length);
 }
 
+/* ---------- REMOVE ---------- */
+function removeSong(i){
+  tracks.splice(i,1);
+  save();
+
+  if(i===current){
+    audio.pause();
+    playing=false;
+    updateUI();
+  }
+
+  render();
+}
+
+/* ---------- FILE UPLOAD ---------- */
+file.addEventListener("change",(e)=>{
+  const files=[...e.target.files];
+
+  files.forEach(f=>{
+    const url=URL.createObjectURL(f);
+    tracks.push({name:f.name,url});
+  });
+
+  save();
+  render();
+  play(tracks.length-1);
+});
+
+/* ---------- END ---------- */
 audio.addEventListener("ended",next);
+
+/* init */
+render();
+updateUI();
 </script>
 
 </body>
