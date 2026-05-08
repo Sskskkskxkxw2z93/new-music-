@@ -3,158 +3,255 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Simple Music App</title>
+<title>Dark Music App</title>
 <style>
   body {
     margin: 0;
     font-family: Arial, sans-serif;
-    background-color: #121212;
-    color: #eee;
+    background-color: #000;
+    color: #fff;
   }
 
   header {
-    padding: 20px;
-    background-color: #1f1f1f;
-    text-align: center;
-    font-size: 1.5em;
-  }
-
-  #song-list {
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-  }
-
-  .song {
-    padding: 10px 15px;
-    margin: 5px 0;
-    background-color: #2c2c2c;
-    border-radius: 5px;
-    cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: background-color 0.2s;
+    padding: 20px;
+    font-size: 1.5em;
+    background-color: #111;
   }
 
-  .song:hover {
-    background-color: #3a3a3a;
-  }
-
-  .song-info {
-    flex: 1;
-  }
-
-  .song-title {
-    font-weight: bold;
-  }
-
-  /* Optional: Add a footer or controls area */
-  #player-controls {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    background-color: #1f1f1f;
-    padding: 10px 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  button {
-    background-color: #333;
+  #add-music {
+    background-color: #222;
     border: none;
-    padding: 8px 12px;
-    border-radius: 4px;
-    color: #eee;
+    padding: 8px 16px;
+    border-radius: 20px;
     cursor: pointer;
+    font-size: 0.9em;
+    color: #fff;
     transition: background-color 0.2s;
   }
 
-  button:hover {
+  #add-music:hover {
+    background-color: #333;
+  }
+
+  #now-playing {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  #music-icon {
+    font-size: 3em;
+    margin-bottom: 10px;
+  }
+
+  #song-title {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+  }
+
+  #controls {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px 0;
+  }
+
+  #controls button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    font-size: 1.5em;
+    transition: color 0.2s;
+  }
+
+  #controls button:hover {
+    color: #1e90ff;
+  }
+
+  #seek-bar {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 4px;
+    background: #444;
+    outline: none;
+    margin: 0 20px;
+  }
+
+  #seek-bar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  #queue {
+    padding: 20px;
+  }
+
+  #queue-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+
+  .track {
+    padding: 10px 0;
+    border-bottom: 1px solid #222;
+  }
+
+  /* Scrollbar styling for queue */
+  #queue::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  #queue::-webkit-scrollbar-thumb {
     background-color: #555;
+    border-radius: 3px;
   }
 </style>
 </head>
 <body>
 
-<header>My Music App</header>
+<header>
+  <div>tune.</div>
+  <button id="add-music">+ Add Music</button>
+</header>
 
-<div id="song-list">
-  <!-- Songs will be listed here -->
+<div id="now-playing">
+  <div id="music-icon">🎵</div>
+  <div id="song-title">No track selected</div>
 </div>
 
-<!-- Optional: Music player controls -->
-<div id="player-controls">
-  <button id="prev">Prev</button>
-  <button id="play">Play</button>
-  <button id="next">Next</button>
+<div id="controls">
+  <button id="prev" title="Previous">⏮️</button>
+  <button id="play" title="Play/Pause">▶️</button>
+  <button id="next" title="Next">⏭️</button>
 </div>
 
-<!-- Optional: Audio element for playback -->
-<audio id="audio-player" controls style="width: 100%; display: none;"></audio>
+<input type="range" id="seek-bar" min="0" max="100" value="0" />
+
+<div id="queue">
+  <div id="queue-title">QUEUE</div>
+  <div id="tracks-list">No tracks added yet. Tap "+ Add Music" to add songs.</div>
+</div>
+
+<audio id="audio" controls style="display:none;"></audio>
 
 <script>
-  // Example list of songs
-  const songs = [
-    { title: "Song One", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-    { title: "Song Two", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
-    { title: "Song Three", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
-    // Add more songs here
-  ];
+  const audio = document.getElementById('audio');
+  const songTitle = document.getElementById('song-title');
+  const tracksList = document.getElementById('tracks-list');
+  const playBtn = document.getElementById('play');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  const seekBar = document.getElementById('seek-bar');
+  const addMusicBtn = document.getElementById('add-music');
 
-  const songListDiv = document.getElementById('song-list');
-  const audioPlayer = document.getElementById('audio-player');
-  let currentSongIndex = 0;
+  let playlist = [];
+  let currentIndex = -;
+  let isPlaying = false;
 
-  function renderSongs() {
-    songListDiv.innerHTML = '';
-    songs.forEach((song, index) => {
-      const songDiv = document.createElement('div');
-      songDiv.className = 'song';
-      songDiv.innerHTML = `
-        <div class="song-info">
-          <div class="song-title">${song.title}</div>
-        </div>
-        <button data-index="${index}">Play</button>
-      `;
-      songDiv.querySelector('button').addEventListener('click', () => {
-        playSong(index);
+  // Function to update the queue display
+  function renderQueue() {
+    if (playlist.length === 0) {
+      tracksList.innerHTML = 'No tracks added yet. Tap "+ Add Music" to add songs.';
+      return;
+    }
+    tracksList.innerHTML = '';
+    playlist.forEach((track, index) => {
+      const trackDiv = document.createElement('div');
+      trackDiv.className = 'track';
+      trackDiv.textContent = track.title;
+      trackDiv.addEventListener('click', () => {
+        playTrack(index);
       });
-      songListDiv.appendChild(songDiv);
+      tracksList.appendChild(trackDiv);
     });
   }
 
-  function playSong(index) {
-    currentSongIndex = index;
-    const song = songs[index];
-    audioPlayer.src = song.url;
-    audioPlayer.style.display = 'block';
-    audioPlayer.play();
+  // Function to play a specific track
+  function playTrack(index) {
+    currentIndex = index;
+    const track = playlist[index];
+    audio.src = track.url;
+    songTitle.textContent = track.title;
+    audio.play();
+    isPlaying = true;
+    playBtn.textContent = '⏸️';
   }
 
-  document.getElementById('prev').addEventListener('click', () => {
-    currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
-    playSong(currentSongIndex);
-  });
-
-  document.getElementById('next').addEventListener('click', () => {
-    currentSongIndex = (currentSongIndex + 1) % songs.length;
-    playSong(currentSongIndex);
-  });
-
+  // Play/Pause button
   document.getElementById('play').addEventListener('click', () => {
-    if (audioPlayer.src) {
-      if (audioPlayer.paused) {
-        audioPlayer.play();
-      } else {
-        audioPlayer.pause();
-      }
+    if (!audio.src) return;
+    if (audio.paused) {
+      audio.play();
+    } else {
+      audio.pause();
     }
   });
 
-  // Initialize the list
-  renderSongs();
+  // Previous track
+  prevBtn.addEventListener('click', () => {
+    if (playlist.length === 0) return;
+    currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+    playTrack(currentIndex);
+  });
+
+  // Next track
+  nextBtn.addEventListener('click', () => {
+    if (playlist.length === 0) return;
+    currentIndex = (currentIndex + 1) % playlist.length;
+    playTrack(currentIndex);
+  });
+
+  // Update seek bar
+  audio.addEventListener('timeupdate', () => {
+    if (audio.duration) {
+      seekBar.value = (audio.currentTime / audio.duration) * 100;
+    }
+  });
+
+  // Seek functionality
+  seekBar.addEventListener('input', () => {
+    if (audio.duration) {
+      audio.currentTime = (seekBar.value / 100) * audio.duration;
+    }
+  });
+
+  // Handle end of track
+  audio.addEventListener('ended', () => {
+    nextBtn.click();
+  });
+
+  // Add music (simulate adding songs)
+  addMusicBtn.addEventListener('click', () => {
+    const title = prompt('Enter song title:');
+    const url = prompt('Enter song URL:');
+    if (title && url) {
+      playlist.push({ title, url });
+      renderQueue();
+    }
+  });
+
+  // When a track starts playing
+  audio.addEventListener('play', () => {
+    isPlaying = true;
+    playBtn.textContent = '⏸️';
+  });
+
+  // When a track pauses
+  audio.addEventListener('pause', () => {
+    isPlaying = false;
+    playBtn.textContent = '▶️';
+  });
+
+  // Initialize
+  renderQueue();
 </script>
 
 </body>
