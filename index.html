@@ -1,181 +1,211 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Dark Music Player</title>
-    <style>
-        :root {
-            --bg-dark: #121212;
-            --card-dark: #1e1e1e;
-            --accent-pink: #ff4d8d;
-            --accent-blue: #00d2ff;
-            --text-gray: #a0a0a0;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tune</title>
 
-        body {
-            background-color: var(--bg-dark);
-            color: white;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            height: 100vh;
-            margin: 0;
-            justify-content: center;
-            align-items: center;
-        }
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@300;400;500&display=swap');
 
-        .player-container {
-            background: linear-gradient(145deg, #1f1f1f, #181818);
-            width: 320px;
-            padding: 40px 20px;
-            border-radius: 50px;
-            box-shadow: 20px 20px 60px #0b0b0b, -5px -5px 20px #252525;
-            text-align: center;
-            position: relative;
-        }
+* { margin:0; padding:0; box-sizing:border-box; }
 
-        /* Circular Progress Area */
-        .circle-container {
-            position: relative;
-            width: 200px;
-            height: 200px;
-            margin: 0 auto 30px;
-        }
+:root {
+  --bg:#050506;
+  --surface:#111114;
+  --surface2:#1a1a1d;
+  --border:#2a2a2e;
+  --accent:#ffffff;
+  --text:#f5f5f5;
+  --muted:#8a8a8f;
+}
 
-        .progress-ring {
-            transform: rotate(-90deg);
-        }
+body {
+  background: radial-gradient(circle at top, #121216, var(--bg));
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:20px;
+}
 
-        .progress-ring__circle {
-            transition: stroke-dashoffset 0.35s;
-            transform-origin: 50% 50%;
-            stroke: var(--accent-pink);
-        }
+header {
+  width:100%;
+  max-width:480px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
 
-        .album-art {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            width: 170px;
-            height: 170px;
-            border-radius: 50%;
-            background: #282828;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4rem;
-            object-fit: cover;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
-        }
+.logo {
+  font-family:'DM Serif Display', serif;
+  font-size:26px;
+  color:var(--accent);
+}
 
-        .info h2 { font-size: 1.2rem; margin: 10px 0 5px; letter-spacing: 1px; }
-        .info p { color: var(--text-gray); font-size: 0.9rem; margin-bottom: 30px; }
+button {
+  cursor:pointer;
+}
 
-        .controls {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 0 20px;
-        }
+.add-btn {
+  background:var(--accent);
+  color:#000;
+  border:none;
+  padding:8px 14px;
+  border-radius:20px;
+  font-size:12px;
+}
 
-        .btn {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-size: 1.2rem;
-            transition: 0.3s;
-        }
+.player {
+  width:100%;
+  max-width:480px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px;
+}
 
-        .btn-play {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: var(--accent-pink);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 4px 15px rgba(255, 77, 141, 0.4);
-        }
+input[type=file] {
+  margin-bottom:10px;
+  color:white;
+}
 
-        /* Hidden File Input */
-        .file-label {
-            display: inline-block;
-            margin-top: 30px;
-            font-size: 0.8rem;
-            color: var(--accent-blue);
-            cursor: pointer;
-            border: 1px solid var(--accent-blue);
-            padding: 5px 15px;
-            border-radius: 20px;
-        }
-    </style>
+audio {
+  width:100%;
+  margin-top:10px;
+}
+
+.controls {
+  display:flex;
+  justify-content:center;
+  gap:15px;
+  margin-top:10px;
+}
+
+.controls button {
+  background:var(--surface2);
+  border:none;
+  color:var(--text);
+  padding:10px 12px;
+  border-radius:10px;
+}
+
+.play {
+  background:var(--accent);
+  color:#000;
+}
+
+.queue {
+  margin-top:15px;
+}
+
+.item {
+  padding:10px;
+  margin:6px 0;
+  background:var(--surface2);
+  border-radius:10px;
+  cursor:pointer;
+  font-size:13px;
+}
+
+.item.active {
+  background:var(--accent);
+  color:#000;
+}
+</style>
 </head>
+
 <body>
 
-<div class="player-container">
-    <div class="circle-container">
-        <svg class="progress-ring" width="200" height="200">
-            <circle stroke="#333" stroke-width="6" fill="transparent" r="90" cx="100" cy="100"/>
-            <circle id="progress-bar" class="progress-ring__circle" stroke-width="6" stroke-dasharray="565.48" stroke-dashoffset="565.48" fill="transparent" r="90" cx="100" cy="100"/>
-        </svg>
-        <div class="album-art" id="art">🎵</div>
-    </div>
+<header>
+  <div class="logo">tune.</div>
+  <button class="add-btn" onclick="file.click()">Add</button>
+</header>
 
-    <div class="info">
-        <h2 id="title">Select Music</h2>
-        <p id="artist">Local Files</p>
-    </div>
+<div class="player">
 
-    <div class="controls">
-        <button class="btn">⏮</button>
-        <button class="btn btn-play" id="play-btn">▶</button>
-        <button class="btn">⏭</button>
-    </div>
-
-    <label class="file-label">
-        PICK FROM FILES
-        <input type="file" id="file-input" hidden accept="audio/*">
-    </label>
-</div>
+<input id="file" type="file" accept="audio/*,video/mp4,.mp3,.m4a,.wav,.aac" multiple>
 
 <audio id="audio"></audio>
 
+<div class="controls">
+  <button onclick="prev()">⏮</button>
+  <button class="play" onclick="toggle()">▶</button>
+  <button onclick="next()">⏭</button>
+</div>
+
+<div class="queue" id="queue"></div>
+
+</div>
+
 <script>
-    const audio = document.getElementById('audio');
-    const playBtn = document.getElementById('play-btn');
-    const fileInput = document.getElementById('file-input');
-    const progressBar = document.getElementById('progress-bar');
-    const title = document.getElementById('title');
-    
-    const circumference = 90 * 2 * Math.PI;
+const file = document.getElementById('file');
+const audio = document.getElementById('audio');
+const queue = document.getElementById('queue');
 
-    fileInput.onchange = (e) => {
-        const file = e.target.files[0];
-        if(file) {
-            audio.src = URL.createObjectURL(file);
-            title.innerText = file.name.split('.')[0];
-            togglePlay();
-        }
-    }
+let tracks = [];
+let current = 0;
 
-    function togglePlay() {
-        if (audio.paused) {
-            audio.play();
-            playBtn.innerText = '⏸';
-        } else {
-            audio.pause();
-            playBtn.innerText = '▶';
-        }
-    }
+function render() {
+  queue.innerHTML = "";
 
-    playBtn.onclick = togglePlay;
+  tracks.forEach((t,i)=>{
+    let div = document.createElement("div");
+    div.className = "item" + (i===current?" active":"");
+    div.textContent = t.name;
+    div.onclick = ()=>play(i);
+    queue.appendChild(div);
+  });
+}
 
-    audio.ontimeupdate = () => {
-        const percent = audio.currentTime / audio.duration;
-        const offset = circumference - (percent * circumference);
-        progressBar.style.strokeDashoffset = offset;
-    }
+file.addEventListener("change",(e)=>{
+  const files = [...e.target.files];
+
+  files.forEach(f=>{
+    const url = URL.createObjectURL(f);
+    tracks.push({name:f.name,url});
+  });
+
+  render();
+  play(0);
+});
+
+function play(i){
+  if(!tracks.length) return;
+
+  current=i;
+
+  audio.pause();
+  audio.src = tracks[i].url;
+  audio.load();
+
+  const p = audio.play();
+  if(p) p.catch(()=>{});
+
+  render();
+}
+
+function toggle(){
+  if(audio.paused){
+    audio.play();
+  } else {
+    audio.pause();
+  }
+}
+
+function next(){
+  if(!tracks.length) return;
+  play((current+1)%tracks.length);
+}
+
+function prev(){
+  if(!tracks.length) return;
+  play((current-1+tracks.length)%tracks.length);
+}
+
+audio.addEventListener("ended",next);
 </script>
 
 </body>
