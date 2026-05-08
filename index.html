@@ -1,268 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Dark Music App</title>
-<style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background-color: #000;
-    color: #fff;
-  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Dark Music Player</title>
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --card-dark: #1e1e1e;
+            --accent-pink: #ff4d8d;
+            --accent-blue: #00d2ff;
+            --text-gray: #a0a0a0;
+        }
 
-  header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    font-size: 1.5em;
-    background-color: #111;
-  }
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            justify-content: center;
+            align-items: center;
+        }
 
-  #add-music-button {
-    background-color: #222;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 0.9em;
-    color: #fff;
-    transition: background-color 0.2s;
-  }
+        .player-container {
+            background: linear-gradient(145deg, #1f1f1f, #181818);
+            width: 320px;
+            padding: 40px 20px;
+            border-radius: 50px;
+            box-shadow: 20px 20px 60px #0b0b0b, -5px -5px 20px #252525;
+            text-align: center;
+            position: relative;
+        }
 
-  #add-music-button:hover {
-    background-color: #333;
-  }
+        /* Circular Progress Area */
+        .circle-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 30px;
+        }
 
-  #file-input {
-    display: none;
-  }
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
 
-  #now-playing {
-    text-align: center;
-    padding: 40px 20px;
-  }
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform-origin: 50% 50%;
+            stroke: var(--accent-pink);
+        }
 
-  #music-icon {
-    font-size: 3em;
-    margin-bottom: 10px;
-  }
+        .album-art {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            background: #282828;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            object-fit: cover;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+        }
 
-  #song-title {
-    font-size: 1.2em;
-    margin-bottom: 10px;
-  }
+        .info h2 { font-size: 1.2rem; margin: 10px 0 5px; letter-spacing: 1px; }
+        .info p { color: var(--text-gray); font-size: 0.9rem; margin-bottom: 30px; }
 
-  #controls {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    padding: 20px 0;
-  }
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 20px;
+        }
 
-  #controls button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #fff;
-    font-size: 1.5em;
-    transition: color 0.2s;
-  }
+        .btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: 0.3s;
+        }
 
-  #controls button:hover {
-    color: #1e90ff;
-  }
+        .btn-play {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--accent-pink);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(255, 77, 141, 0.4);
+        }
 
-  #seek-bar {
-    width: 100%;
-    -webkit-appearance: none;
-    height: 4px;
-    background: #444;
-    outline: none;
-    margin: 0 20px;
-  }
-
-  #seek-bar::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 12px;
-    height: 12px;
-    background: #fff;
-    border-radius: 50%;
-    cursor: pointer;
-  }
-
-  #queue {
-    padding: 20px;
-  }
-
-  #queue-title {
-    font-weight: bold;
-    margin-bottom: 10px;
-  }
-
-  .track {
-    padding: 10px 0;
-    border-bottom: 1px solid #222;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  .track:hover {
-    background-color: #222;
-  }
-
-  /* Scrollbar styling for queue */
-  #queue::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  #queue::-webkit-scrollbar-thumb {
-    background-color: #555;
-    border-radius: 3px;
-  }
-</style>
+        /* Hidden File Input */
+        .file-label {
+            display: inline-block;
+            margin-top: 30px;
+            font-size: 0.8rem;
+            color: var(--accent-blue);
+            cursor: pointer;
+            border: 1px solid var(--accent-blue);
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+    </style>
 </head>
 <body>
 
-<header>
-  <div>tune.</div>
-  <button id="add-music-btn">+ Add Music</button>
-  <input type="file" id="file-input" accept="audio/*" multiple />
-</header>
+<div class="player-container">
+    <div class="circle-container">
+        <svg class="progress-ring" width="200" height="200">
+            <circle stroke="#333" stroke-width="6" fill="transparent" r="90" cx="100" cy="100"/>
+            <circle id="progress-bar" class="progress-ring__circle" stroke-width="6" stroke-dasharray="565.48" stroke-dashoffset="565.48" fill="transparent" r="90" cx="100" cy="100"/>
+        </svg>
+        <div class="album-art" id="art">🎵</div>
+    </div>
 
-<div id="now-playing">
-  <div id="music-icon">🎵</div>
-  <div id="song-title">No track selected</div>
+    <div class="info">
+        <h2 id="title">Select Music</h2>
+        <p id="artist">Local Files</p>
+    </div>
+
+    <div class="controls">
+        <button class="btn">⏮</button>
+        <button class="btn btn-play" id="play-btn">▶</button>
+        <button class="btn">⏭</button>
+    </div>
+
+    <label class="file-label">
+        PICK FROM FILES
+        <input type="file" id="file-input" hidden accept="audio/*">
+    </label>
 </div>
 
-<div id="controls">
-  <button id="prev" title="Previous">⏮️</button>
-  <button id="play" title="Play/Pause">▶️</button>
-  <button id="next" title="Next">⏭️</button>
-</div>
-
-<input type="range" id="seek-bar" min="0" max="100" value="0" />
-
-<div id="queue">
-  <div id="queue-title">QUEUE</div>
-  <div id="tracks-list">No tracks added yet. Use "+ Add Music" to select files.</div>
-</div>
-
-<audio id="audio" controls style="display:none;"></audio>
+<audio id="audio"></audio>
 
 <script>
-  const audio = document.getElementById('audio');
-  const songTitle = document.getElementById('song-title');
-  const tracksList = document.getElementById('tracks-list');
-  const playBtn = document.getElementById('play');
-  const prevBtn = document.getElementById('prev');
-  const nextBtn = document.getElementById('next');
-  const seekBar = document.getElementById('seek-bar');
-  const addMusicBtn = document.getElementById('add-music-btn');
-  const fileInput = document.getElementById('file-input');
+    const audio = document.getElementById('audio');
+    const playBtn = document.getElementById('play-btn');
+    const fileInput = document.getElementById('file-input');
+    const progressBar = document.getElementById('progress-bar');
+    const title = document.getElementById('title');
+    
+    const circumference = 90 * 2 * Math.PI;
 
-  let playlist = [];
-  let currentIndex = -;
-  let isPlaying = false;
-
-  // Render queue
-  function renderQueue() {
-    if (playlist.length === 0) {
-      tracksList.innerHTML = 'No tracks added yet. Use "+ Add Music" to select files.';
-      return;
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if(file) {
+            audio.src = URL.createObjectURL(file);
+            title.innerText = file.name.split('.')[0];
+            togglePlay();
+        }
     }
-    tracksList.innerHTML = '';
-    playlist.forEach((track, index) => {
-      const trackDiv = document.createElement('div');
-      trackDiv.className = 'track';
-      trackDiv.textContent = track.title;
-      trackDiv.addEventListener('click', () => {
-        playTrack(index);
-      });
-      tracksList.appendChild(trackDiv);
-    });
-  }
 
-  // Play a specific track
-  function playTrack(index) {
-    currentIndex = index;
-    const track = playlist[index];
-    audio.src = track.url;
-    songTitle.textContent = track.title;
-    audio.play();
-  }
-
-  // Handle play/pause
-  document.getElementById('play').addEventListener('click', () => {
-    if (!audio.src) return;
-    if (audio.paused) {
-      audio.play();
-    } else {
-      audio.pause();
+    function togglePlay() {
+        if (audio.paused) {
+            audio.play();
+            playBtn.innerText = '⏸';
+        } else {
+            audio.pause();
+            playBtn.innerText = '▶';
+        }
     }
-  });
 
-  // Previous track
-  prevBtn.addEventListener('click', () => {
-    if (playlist.length === 0) return;
-    currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
-    playTrack(currentIndex);
-  });
+    playBtn.onclick = togglePlay;
 
-  // Next track
-  nextBtn.addEventListener('click', () => {
-    if (playlist.length === 0) return;
-    currentIndex = (currentIndex + 1) % playlist.length;
-    playTrack(currentIndex);
-  });
-
-  // Update seek bar
-  audio.addEventListener('timeupdate', () => {
-    if (audio.duration) {
-      seekBar.value = (audio.currentTime / audio.duration) * 100;
+    audio.ontimeupdate = () => {
+        const percent = audio.currentTime / audio.duration;
+        const offset = circumference - (percent * circumference);
+        progressBar.style.strokeDashoffset = offset;
     }
-  });
-
-  // Seek
-  seekBar.addEventListener('input', () => {
-    if (audio.duration) {
-      audio.currentTime = (seekBar.value / 100) * audio.duration;
-    }
-  });
-
-  // When track ends
-  audio.addEventListener('ended', () => {
-    nextBtn.click();
-  });
-
-  // Open file dialog on button click
-document.getElementById('add-music-btn').addEventListener('click', () => {
-  fileInput.click();
-});
-
-// Handle selected files
-fileInput.addEventListener('change', () => {
-  const files = Array.from(fileInput.files);
-  files.forEach(file => {
-    const url = URL.createObjectURL(file);
-    playlist.push({ title: file.name, url });
-  });
-  renderQueue();
-});
-
-  // Initialize with sample songs (optional)
-  // Uncomment below if you want default songs
-  /*
-  playlist = [
-    { title: "Sample Song 1", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-    { title: "Sample Song 2", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" }
-  ];
-  renderQueue();
-  */
-
 </script>
 
 </body>
