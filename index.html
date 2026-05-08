@@ -1,270 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Pulse Music</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music</title>
 
 <style>
-:root {
-  --bg:#0b0b0d;
-  --card:#151518;
-  --card2:#1d1d22;
-  --text:#ffffff;
-  --muted:#9a9aa3;
-  --accent:#1db954;
-}
-
-* { margin:0; padding:0; box-sizing:border-box; }
-
 body {
-  font-family: -apple-system, Arial;
-  background: radial-gradient(circle at top, #1a1a20, var(--bg));
-  color:var(--text);
+  margin:0;
+  font-family: Arial;
+  background:#0b0b0b;
+  color:white;
   display:flex;
   flex-direction:column;
   align-items:center;
-  padding:18px;
+  padding:20px;
 }
 
 header {
   width:100%;
-  max-width:520px;
+  max-width:500px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  margin-bottom:12px;
-}
-
-.logo {
-  font-size:22px;
-  font-weight:700;
-  letter-spacing:0.5px;
-}
-
-.add {
-  background:var(--accent);
-  color:#000;
-  border:none;
-  padding:8px 14px;
-  border-radius:20px;
-}
-
-.player {
-  width:100%;
-  max-width:520px;
-  background:linear-gradient(145deg,#16161a,#101014);
-  border-radius:18px;
-  padding:16px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.4);
-}
-
-/* ARTWORK */
-.art {
-  width:100%;
-  aspect-ratio:1;
-  border-radius:14px;
-  background:linear-gradient(135deg,#2a2a2f,#111);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:42px;
-  font-weight:700;
-  margin-bottom:12px;
-  position:relative;
-  overflow:hidden;
-}
-
-.art::after {
-  content:"";
-  position:absolute;
-  inset:0;
-  background:radial-gradient(circle at center, rgba(255,255,255,0.08), transparent 60%);
-  animation:pulse 3s infinite;
-}
-
-@keyframes pulse {
-  0%,100% { opacity:0.4; }
-  50% { opacity:0.8; }
-}
-
-/* TITLE */
-.title {
-  font-size:18px;
-  margin-bottom:4px;
-}
-.sub {
-  font-size:12px;
-  color:var(--muted);
   margin-bottom:10px;
-}
-
-/* CONTROLS */
-.controls {
-  display:flex;
-  justify-content:center;
-  gap:14px;
-  margin-top:10px;
 }
 
 button {
   border:none;
+  padding:10px 14px;
+  border-radius:10px;
+  background:#1e1e1e;
+  color:white;
   cursor:pointer;
 }
 
-.play {
-  width:54px;
-  height:54px;
-  border-radius:50%;
-  background:var(--accent);
+.primary {
+  background:#ffffff;
   color:#000;
-  font-size:18px;
-  transition:transform 0.2s;
 }
 
-.play:active { transform:scale(0.95); }
-
-.ctrl {
-  background:#222;
-  color:white;
-  padding:10px 12px;
-  border-radius:10px;
-}
-
-/* LIST */
-.list {
+.player {
   width:100%;
-  max-width:520px;
-  margin-top:14px;
+  max-width:500px;
+  background:#151515;
+  padding:15px;
+  border-radius:14px;
+}
+
+audio {
+  width:100%;
+  margin-top:10px;
+}
+
+.controls {
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-top:10px;
+}
+
+.list {
+  margin-top:15px;
+  width:100%;
+  max-width:500px;
 }
 
 .item {
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  padding:12px;
+  padding:10px;
   margin:6px 0;
-  background:var(--card);
-  border-radius:12px;
-  transition:0.2s;
-}
-
-.item:hover {
-  background:var(--card2);
+  background:#1e1e1e;
+  border-radius:10px;
 }
 
 .item.active {
-  border-left:3px solid var(--accent);
+  border-left:3px solid #fff;
 }
 
 .small {
   font-size:12px;
-  color:var(--muted);
+  opacity:0.6;
 }
-
-.delete {
-  background:none;
-  color:#888;
-  border:none;
-  cursor:pointer;
-}
-.delete:hover { color:#ff4d4d; }
-
-/* hidden input */
-input { display:none; }
 </style>
 </head>
 
 <body>
 
 <header>
-  <div class="logo">Pulse</div>
-  <button class="add" onclick="file.click()">Add Music</button>
+  <h3>Music</h3>
+  <button onclick="file.click()">Add</button>
 </header>
 
 <div class="player">
 
-<div class="art" id="art">♫</div>
-
-<div class="title" id="title">No song selected</div>
-<div class="sub" id="sub">Upload music to start</div>
+<input id="file" type="file" accept="audio/*" multiple>
 
 <audio id="audio"></audio>
 
 <div class="controls">
-  <button class="ctrl" onclick="prev()">⏮</button>
-
-  <button class="play" onclick="toggle()" id="playBtn">▶</button>
-
-  <button class="ctrl" onclick="next()">⏭</button>
+  <button onclick="prev()">Prev</button>
+  <button class="primary" onclick="toggle()" id="playBtn">Play</button>
+  <button onclick="next()">Next</button>
 </div>
 
 </div>
 
 <div class="list" id="list"></div>
 
-<input type="file" id="file" accept="audio/*,video/mp4,.mp3,.m4a,.wav,.aac" multiple>
-
 <script>
 const file = document.getElementById("file");
 const audio = document.getElementById("audio");
 const list = document.getElementById("list");
 const playBtn = document.getElementById("playBtn");
-const title = document.getElementById("title");
-const sub = document.getElementById("sub");
-const art = document.getElementById("art");
 
-let tracks = JSON.parse(localStorage.getItem("tracks")||"[]");
+let db;
+let tracks = [];
 let current = 0;
 let playing = false;
 
-/* ---------- SAVE ---------- */
-function save(){
-  localStorage.setItem("tracks", JSON.stringify(tracks));
-}
+/* ---------- INIT DB ---------- */
+function openDB(){
+  return new Promise((res)=>{
+    const request = indexedDB.open("musicDB",1);
 
-/* ---------- ART GENERATION ---------- */
-function setArt(name){
-  const letters = name ? name.split(" ").map(w=>w[0]).slice(0,2).join("") : "♫";
-  art.textContent = letters.toUpperCase();
-}
+    request.onupgradeneeded = e=>{
+      const db = e.target.result;
+      db.createObjectStore("tracks",{keyPath:"id",autoIncrement:true});
+    };
 
-/* ---------- RENDER ---------- */
-function render(){
-  list.innerHTML="";
-
-  tracks.forEach((t,i)=>{
-    const div=document.createElement("div");
-    div.className="item"+(i===current?" active":"");
-
-    div.innerHTML=`
-      <div onclick="play(${i})">
-        <div>${t.name}</div>
-        <div class="small">Local file</div>
-      </div>
-      <button class="delete" onclick="removeSong(${i})">🗑</button>
-    `;
-
-    list.appendChild(div);
+    request.onsuccess = ()=>res(request.result);
   });
 }
+
+/* ---------- SAVE FILE ---------- */
+async function saveFile(file){
+  const db = await openDB();
+
+  return new Promise((res)=>{
+    const tx = db.transaction("tracks","readwrite");
+    const store = tx.objectStore("tracks");
+
+    store.add({
+      name:file.name,
+      blob:file
+    });
+
+    tx.oncomplete = ()=>res();
+  });
+}
+
+/* ---------- LOAD FILES ---------- */
+async function loadFiles(){
+  const db = await openDB();
+
+  return new Promise((res)=>{
+    const tx = db.transaction("tracks","readonly");
+    const store = tx.objectStore("tracks");
+
+    const req = store.getAll();
+
+    req.onsuccess = ()=>{
+      tracks = req.result.map(t=>({
+        id:t.id,
+        name:t.name,
+        url:URL.createObjectURL(t.blob)
+      }));
+
+      render();
+      res();
+    };
+  });
+}
+
+/* ---------- FILE INPUT ---------- */
+file.addEventListener("change", async (e)=>{
+  const files=[...e.target.files];
+
+  for(let f of files){
+    await saveFile(f);
+  }
+
+  await loadFiles();
+  play(tracks.length-1);
+});
 
 /* ---------- PLAY ---------- */
 function play(i){
   if(!tracks.length) return;
 
   current=i;
-  const t=tracks[i];
 
-  audio.src=t.url;
+  audio.src=tracks[i].url;
   audio.play();
 
   playing=true;
-  updateUI();
-
-  setArt(t.name);
-  title.textContent=t.name;
-  sub.textContent="Now playing";
+  playBtn.textContent="Pause";
 
   render();
 }
@@ -276,16 +207,12 @@ function toggle(){
   if(playing){
     audio.pause();
     playing=false;
-  }else{
+    playBtn.textContent="Play";
+  } else {
     audio.play();
     playing=true;
+    playBtn.textContent="Pause";
   }
-  updateUI();
-}
-
-/* ---------- UI BUTTON ---------- */
-function updateUI(){
-  playBtn.textContent = playing ? "⏸" : "▶";
 }
 
 /* ---------- NEXT / PREV ---------- */
@@ -299,40 +226,43 @@ function prev(){
   play((current-1+tracks.length)%tracks.length);
 }
 
-/* ---------- REMOVE ---------- */
-function removeSong(i){
-  tracks.splice(i,1);
-  save();
+/* ---------- DELETE ---------- */
+async function remove(id){
+  const db = await openDB();
 
-  if(i===current){
-    audio.pause();
-    playing=false;
-    updateUI();
-  }
+  const tx = db.transaction("tracks","readwrite");
+  tx.objectStore("tracks").delete(id);
 
-  render();
+  tx.oncomplete = async ()=>{
+    await loadFiles();
+  };
 }
 
-/* ---------- FILE UPLOAD ---------- */
-file.addEventListener("change",(e)=>{
-  const files=[...e.target.files];
+/* ---------- RENDER ---------- */
+function render(){
+  list.innerHTML="";
 
-  files.forEach(f=>{
-    const url=URL.createObjectURL(f);
-    tracks.push({name:f.name,url});
+  tracks.forEach((t,i)=>{
+    const div=document.createElement("div");
+    div.className="item"+(i===current?" active":"");
+
+    div.innerHTML=`
+      <div onclick="play(${i})">
+        ${t.name}
+        <div class="small">local</div>
+      </div>
+      <button onclick="remove(${t.id})">Delete</button>
+    `;
+
+    list.appendChild(div);
   });
+}
 
-  save();
-  render();
-  play(tracks.length-1);
-});
-
-/* ---------- END ---------- */
+/* ---------- AUTO NEXT ---------- */
 audio.addEventListener("ended",next);
 
-/* init */
-render();
-updateUI();
+/* ---------- INIT ---------- */
+loadFiles();
 </script>
 
 </body>
