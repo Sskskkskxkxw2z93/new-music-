@@ -21,7 +21,7 @@
     background-color: #111;
   }
 
-  #add-music {
+  #add-music-button {
     background-color: #222;
     border: none;
     padding: 8px 16px;
@@ -32,8 +32,12 @@
     transition: background-color 0.2s;
   }
 
-  #add-music:hover {
+  #add-music-button:hover {
     background-color: #333;
+  }
+
+  #file-input {
+    display: none;
   }
 
   #now-playing {
@@ -102,6 +106,12 @@
   .track {
     padding: 10px 0;
     border-bottom: 1px solid #222;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .track:hover {
+    background-color: #222;
   }
 
   /* Scrollbar styling for queue */
@@ -119,7 +129,8 @@
 
 <header>
   <div>tune.</div>
-  <button id="add-music">+ Add Music</button>
+  <button id="add-music-btn">+ Add Music</button>
+  <input type="file" id="file-input" accept="audio/*" multiple />
 </header>
 
 <div id="now-playing">
@@ -137,7 +148,7 @@
 
 <div id="queue">
   <div id="queue-title">QUEUE</div>
-  <div id="tracks-list">No tracks added yet. Tap "+ Add Music" to add songs.</div>
+  <div id="tracks-list">No tracks added yet. Use "+ Add Music" to select files.</div>
 </div>
 
 <audio id="audio" controls style="display:none;"></audio>
@@ -150,16 +161,17 @@
   const prevBtn = document.getElementById('prev');
   const nextBtn = document.getElementById('next');
   const seekBar = document.getElementById('seek-bar');
-  const addMusicBtn = document.getElementById('add-music');
+  const addMusicBtn = document.getElementById('add-music-btn');
+  const fileInput = document.getElementById('file-input');
 
   let playlist = [];
   let currentIndex = -;
   let isPlaying = false;
 
-  // Function to update the queue display
+  // Render queue
   function renderQueue() {
     if (playlist.length === 0) {
-      tracksList.innerHTML = 'No tracks added yet. Tap "+ Add Music" to add songs.';
+      tracksList.innerHTML = 'No tracks added yet. Use "+ Add Music" to select files.';
       return;
     }
     tracksList.innerHTML = '';
@@ -174,18 +186,16 @@
     });
   }
 
-  // Function to play a specific track
+  // Play a specific track
   function playTrack(index) {
     currentIndex = index;
     const track = playlist[index];
     audio.src = track.url;
     songTitle.textContent = track.title;
     audio.play();
-    isPlaying = true;
-    playBtn.textContent = '⏸️';
   }
 
-  // Play/Pause button
+  // Handle play/pause
   document.getElementById('play').addEventListener('click', () => {
     if (!audio.src) return;
     if (audio.paused) {
@@ -216,42 +226,43 @@
     }
   });
 
-  // Seek functionality
+  // Seek
   seekBar.addEventListener('input', () => {
     if (audio.duration) {
       audio.currentTime = (seekBar.value / 100) * audio.duration;
     }
   });
 
-  // Handle end of track
+  // When track ends
   audio.addEventListener('ended', () => {
     nextBtn.click();
   });
 
-  // Add music (simulate adding songs)
-  addMusicBtn.addEventListener('click', () => {
-    const title = prompt('Enter song title:');
-    const url = prompt('Enter song URL:');
-    if (title && url) {
-      playlist.push({ title, url });
-      renderQueue();
-    }
-  });
+  // Open file dialog on button click
+document.getElementById('add-music-btn').addEventListener('click', () => {
+  fileInput.click();
+});
 
-  // When a track starts playing
-  audio.addEventListener('play', () => {
-    isPlaying = true;
-    playBtn.textContent = '⏸️';
+// Handle selected files
+fileInput.addEventListener('change', () => {
+  const files = Array.from(fileInput.files);
+  files.forEach(file => {
+    const url = URL.createObjectURL(file);
+    playlist.push({ title: file.name, url });
   });
-
-  // When a track pauses
-  audio.addEventListener('pause', () => {
-    isPlaying = false;
-    playBtn.textContent = '▶️';
-  });
-
-  // Initialize
   renderQueue();
+});
+
+  // Initialize with sample songs (optional)
+  // Uncomment below if you want default songs
+  /*
+  playlist = [
+    { title: "Sample Song 1", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+    { title: "Sample Song 2", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" }
+  ];
+  renderQueue();
+  */
+
 </script>
 
 </body>
