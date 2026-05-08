@@ -74,7 +74,6 @@ header{
 }
 
 .title{font-size:18px;font-weight:600;}
-.sub{font-size:12px;color:var(--muted);margin-bottom:10px;}
 
 /* PROGRESS */
 .progress-row{
@@ -129,10 +128,6 @@ header{
 
 .item.dragging{opacity:0.5;}
 
-.item.active{border-left:3px solid var(--green);}
-
-.small{font-size:12px;color:var(--muted);}
-
 .del{
   background:none;
   border:none;
@@ -157,11 +152,9 @@ input[type="file"]{display:none;}
   <div class="art"><div class="vinyl"></div></div>
 
   <div class="title" id="title">No song playing</div>
-  <div class="sub">Add music to start</div>
 
   <audio id="audio"></audio>
 
-  <!-- PROGRESS -->
   <div class="progress-row">
     <span id="currentTime">0:00</span>
     <input type="range" id="progress" min="0" max="100" value="0">
@@ -218,7 +211,6 @@ async function saveFile(file){
 /* LOAD */
 async function loadFiles(){
   const db=await openDB();
-
   return new Promise(res=>{
     const tx=db.transaction("tracks","readonly");
     const req=tx.objectStore("tracks").getAll();
@@ -272,7 +264,7 @@ function toggle(){
   }
 }
 
-/* NEXT/PREV */
+/* NEXT / PREV */
 function next(){
   let i=tracks.findIndex(t=>t.id===currentId);
   i=(i+1)%tracks.length;
@@ -285,7 +277,7 @@ function prev(){
   playById(tracks[i].id);
 }
 
-/* PROGRESS UPDATE */
+/* PROGRESS */
 audio.addEventListener("timeupdate",()=>{
   if(audio.duration){
     progress.value=(audio.currentTime/audio.duration)*100;
@@ -318,7 +310,6 @@ async function remove(id){
     tracks.splice(i,1);
   }
 
-  /* RESET PLAYER */
   if(currentId===id){
     audio.pause();
     audio.src="";
@@ -346,14 +337,15 @@ function render(){
     div.innerHTML=`
       <div onclick="playById(${t.id})">
         ${clean(t.name)}
-        <div class="small">local</div>
       </div>
       <button class="del" onclick="remove(${t.id})">Remove</button>
     `;
 
-    /* drag */
     div.addEventListener("dragstart",()=>div.classList.add("dragging"));
-    div.addEventListener("dragend",()=>div.classList.remove("dragging"));
+    div.addEventListener("dragend",()=>{
+      div.classList.remove("dragging");
+      saveOrder();
+    });
 
     queue.appendChild(div);
   });
@@ -384,14 +376,22 @@ function getAfter(y){
   },{offset:-Infinity}).element;
 }
 
-/* FILES */
+/* SAVE ORDER */
+function saveOrder(){
+  const newOrder=[...queue.querySelectorAll(".item")].map(div=>{
+    const name=div.innerText;
+    return tracks.find(t=>clean(t.name)===name);
+  });
+
+  tracks=newOrder.filter(Boolean);
+}
+
+/* INIT */
 file.addEventListener("change",async e=>{
-  const files=[...e.target.files];
-  for(let f of files) await saveFile(f);
+  for(let f of e.target.files) await saveFile(f);
   loadFiles();
 });
 
-/* INIT */
 loadFiles();
 </script>
 
