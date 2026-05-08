@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Music</title>
+<title>Music App</title>
 
 <style>
 :root{
@@ -77,9 +77,17 @@ header{
 .sub{font-size:12px;color:var(--muted);margin-bottom:10px;}
 
 /* PROGRESS */
-.progress input{
-  width:100%;
+.progress-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
   margin:10px 0;
+  font-size:12px;
+  color:var(--muted);
+}
+
+.progress-row input{
+  flex:1;
   accent-color:var(--green);
 }
 
@@ -119,13 +127,9 @@ header{
   cursor:grab;
 }
 
-.item.dragging{
-  opacity:0.5;
-}
+.item.dragging{opacity:0.5;}
 
-.item.active{
-  border-left:3px solid var(--green);
-}
+.item.active{border-left:3px solid var(--green);}
 
 .small{font-size:12px;color:var(--muted);}
 
@@ -149,6 +153,7 @@ input[type="file"]{display:none;}
 </header>
 
 <div class="now">
+
   <div class="art"><div class="vinyl"></div></div>
 
   <div class="title" id="title">No song playing</div>
@@ -156,8 +161,11 @@ input[type="file"]{display:none;}
 
   <audio id="audio"></audio>
 
-  <div class="progress">
+  <!-- PROGRESS -->
+  <div class="progress-row">
+    <span id="currentTime">0:00</span>
     <input type="range" id="progress" min="0" max="100" value="0">
+    <span id="duration">0:00</span>
   </div>
 
   <div class="controls">
@@ -165,6 +173,7 @@ input[type="file"]{display:none;}
     <button class="btn play" onclick="toggle()" id="playBtn">Play</button>
     <button class="btn" onclick="next()">Next</button>
   </div>
+
 </div>
 
 <div class="queue" id="queue"></div>
@@ -178,14 +187,14 @@ const queue=document.getElementById("queue");
 const title=document.getElementById("title");
 const playBtn=document.getElementById("playBtn");
 const progress=document.getElementById("progress");
+const currentTimeEl=document.getElementById("currentTime");
+const durationEl=document.getElementById("duration");
 
 let tracks=[];
 let currentId=null;
 let playing=false;
 
 /* DB */
-let db;
-
 function openDB(){
   return new Promise(res=>{
     const req=indexedDB.open("MusicDB",1);
@@ -201,8 +210,7 @@ async function saveFile(file){
   const db=await openDB();
   return new Promise(res=>{
     const tx=db.transaction("tracks","readwrite");
-    const store=tx.objectStore("tracks");
-    const req=store.add({name:file.name,blob:file});
+    const req=tx.objectStore("tracks").add({name:file.name,blob:file});
     req.onsuccess=()=>res(req.result);
   });
 }
@@ -222,7 +230,6 @@ async function loadFiles(){
         blob:t.blob,
         url:URL.createObjectURL(t.blob)
       }));
-
       render();
       res();
     };
@@ -231,7 +238,7 @@ async function loadFiles(){
 
 /* CLEAN NAME */
 function clean(n){
-  return n.replace(/\.[^/.]+$/, "");
+  return n.replace(/\.[^/.]+$/,"");
 }
 
 /* PLAY */
@@ -265,7 +272,7 @@ function toggle(){
   }
 }
 
-/* NEXT / PREV */
+/* NEXT/PREV */
 function next(){
   let i=tracks.findIndex(t=>t.id===currentId);
   i=(i+1)%tracks.length;
@@ -278,16 +285,25 @@ function prev(){
   playById(tracks[i].id);
 }
 
-/* PROGRESS */
+/* PROGRESS UPDATE */
 audio.addEventListener("timeupdate",()=>{
   if(audio.duration){
     progress.value=(audio.currentTime/audio.duration)*100;
+    currentTimeEl.textContent=format(audio.currentTime);
+    durationEl.textContent=format(audio.duration);
   }
 });
 
 progress.addEventListener("input",()=>{
   audio.currentTime=(progress.value/100)*audio.duration;
 });
+
+function format(s){
+  if(isNaN(s)) return "0:00";
+  const m=Math.floor(s/60);
+  const sec=Math.floor(s%60);
+  return `${m}:${sec<10?"0":""}${sec}`;
+}
 
 /* DELETE */
 async function remove(id){
@@ -296,9 +312,23 @@ async function remove(id){
   tx.objectStore("tracks").delete(id);
 
   const i=tracks.findIndex(t=>t.id===id);
+
   if(i>-1){
     URL.revokeObjectURL(tracks[i].url);
     tracks.splice(i,1);
+  }
+
+  /* RESET PLAYER */
+  if(currentId===id){
+    audio.pause();
+    audio.src="";
+    currentId=null;
+    playing=false;
+    title.textContent="No song playing";
+    playBtn.textContent="Play";
+    progress.value=0;
+    currentTimeEl.textContent="0:00";
+    durationEl.textContent="0:00";
   }
 
   render();
@@ -313,8 +343,6 @@ function render(){
     div.className="item";
     div.draggable=true;
 
-    div.dataset.id=t.id;
-
     div.innerHTML=`
       <div onclick="playById(${t.id})">
         ${clean(t.name)}
@@ -323,7 +351,7 @@ function render(){
       <button class="del" onclick="remove(${t.id})">Remove</button>
     `;
 
-    /* DRAG EVENTS */
+    /* drag */
     div.addEventListener("dragstart",()=>div.classList.add("dragging"));
     div.addEventListener("dragend",()=>div.classList.remove("dragging"));
 
@@ -335,17 +363,14 @@ function render(){
 queue.addEventListener("dragover",e=>{
   e.preventDefault();
 
-  const after=getDragAfter(e.clientY);
+  const after=getAfter(e.clientY);
   const dragging=document.querySelector(".dragging");
 
-  if(!after){
-    queue.appendChild(dragging);
-  }else{
-    queue.insertBefore(dragging,after);
-  }
+  if(!after) queue.appendChild(dragging);
+  else queue.insertBefore(dragging,after);
 });
 
-function getDragAfter(y){
+function getAfter(y){
   const els=[...queue.querySelectorAll(".item:not(.dragging)")];
 
   return els.reduce((closest,child)=>{
@@ -353,21 +378,16 @@ function getDragAfter(y){
     const offset=y-box.top-box.height/2;
 
     if(offset<0 && offset>closest.offset){
-      return {offset:offset,element:child};
-    }else{
-      return closest;
+      return {offset,element:child};
     }
-  },{offset:Number.NEGATIVE_INFINITY}).element;
+    return closest;
+  },{offset:-Infinity}).element;
 }
 
-/* FILE INPUT */
+/* FILES */
 file.addEventListener("change",async e=>{
   const files=[...e.target.files];
-
-  for(let f of files){
-    await saveFile(f);
-  }
-
+  for(let f of files) await saveFile(f);
   loadFiles();
 });
 
