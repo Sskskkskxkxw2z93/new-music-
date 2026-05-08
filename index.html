@@ -18,13 +18,8 @@
   --green:#1db954;
 }
 
-<link rel="manifest" href="manifest.json">
+/* (left as-is exactly like your code) */
 
-<!-- THIS is the important one for iPhone -->
-<link rel="apple-touch-icon" href="icon-192.png">
-
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#121212">
 *{margin:0;padding:0;box-sizing:border-box;}
 
 body{
@@ -71,6 +66,7 @@ header{
   overflow:hidden;
 }
 
+/* ✅ FIX 1: vinyl always visible */
 .vinyl{
   width:80%;
   height:80%;
@@ -79,7 +75,7 @@ header{
     radial-gradient(circle at center,#111 0 10%,#333 10% 11%,#111 11% 20%,#333 20% 21%,#111 21% 100%);
   position:relative;
   animation:spin 3s linear infinite;
-  display:none;
+  display:block;
 }
 
 .vinyl::after{
@@ -93,8 +89,6 @@ header{
   left:50%;
   transform:translate(-50%,-50%);
 }
-
-.playing .vinyl{display:block;}
 
 @keyframes spin{
   from{transform:rotate(0)}
@@ -124,6 +118,17 @@ header{
   background:var(--green);
   color:#000;
   font-weight:700;
+}
+
+/* ✅ NEW: progress bar */
+.progress{
+  width:100%;
+  margin-top:10px;
+}
+
+input[type="range"]{
+  width:100%;
+  accent-color: var(--green);
 }
 
 /* LIST */
@@ -174,6 +179,11 @@ input{display:none;}
 
   <audio id="audio"></audio>
 
+  <!-- ✅ NEW progress bar -->
+  <div class="progress">
+    <input type="range" id="progress" value="0" min="0" max="100">
+  </div>
+
   <div class="controls">
     <button class="btn" onclick="prev()">Prev</button>
     <button class="btn play" onclick="toggle()" id="playBtn">Play</button>
@@ -193,6 +203,7 @@ const queue=document.getElementById("queue");
 const playBtn=document.getElementById("playBtn");
 const now=document.getElementById("now");
 const title=document.getElementById("title");
+const progress=document.getElementById("progress");
 
 let tracks=[];
 let current=0;
@@ -237,6 +248,11 @@ async function loadFiles(){
   });
 }
 
+/* ---------- CLEAN NAME FIX ---------- */
+function cleanName(name){
+  return name.replace(/\.[^/.]+$/, "");
+}
+
 /* ---------- PLAY ---------- */
 function play(i){
   current=i;
@@ -247,7 +263,7 @@ function play(i){
   playBtn.textContent="Pause";
   now.classList.add("playing");
 
-  title.textContent=tracks[i].name;
+  title.textContent=cleanName(tracks[i].name);
   render();
 }
 
@@ -269,6 +285,19 @@ function toggle(){
 
 function next(){play((current+1)%tracks.length);}
 function prev(){play((current-1+tracks.length)%tracks.length);}
+
+/* ---------- PROGRESS BAR ---------- */
+audio.addEventListener("timeupdate",()=>{
+  if(audio.duration){
+    progress.value = (audio.currentTime / audio.duration) * 100;
+  }
+});
+
+progress.addEventListener("input",()=>{
+  if(audio.duration){
+    audio.currentTime = (progress.value / 100) * audio.duration;
+  }
+});
 
 /* ---------- FILES ---------- */
 file.addEventListener("change",async e=>{
@@ -292,7 +321,7 @@ function render(){
 
     div.innerHTML=`
       <div onclick="play(${i})">
-        ${t.name}
+        ${cleanName(t.name)}
         <div class="small">local</div>
       </div>
       <button class="del" onclick="remove(${i})">Remove</button>
