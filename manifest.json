@@ -7,7 +7,7 @@
   "theme_color": "#1db954",
   "icons": [
     {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/8/84/Turntable_icon.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     }
