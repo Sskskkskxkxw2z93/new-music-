@@ -14,14 +14,6 @@
   --green:#1db954;
 }
 
-<link rel="icon" type="image/png" href="./icon-192.png">
-<link rel="apple-touch-icon" sizes="180x180" href="./icon-192.png">
-<link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Music">
-<meta name="theme-color" content="#121212">
-<link rel="manifest" href="manifest.json">
-
 *{margin:0;padding:0;box-sizing:border-box;}
 
 body{
@@ -163,6 +155,7 @@ input[type="file"]{display:none;}
 
   <audio id="audio"></audio>
 
+  <!-- PROGRESS -->
   <div class="progress-row">
     <span id="currentTime">0:00</span>
     <input type="range" id="progress" min="0" max="100" value="0">
@@ -194,6 +187,7 @@ const durationEl=document.getElementById("duration");
 let tracks=[];
 let currentId=null;
 let playing=false;
+let isSeeking=false;
 
 /* DB */
 function openDB(){
@@ -285,21 +279,35 @@ function prev(){
   playById(tracks[i].id);
 }
 
-/* PROGRESS */
+/* PROGRESS FIX (FULLY WORKING) */
+audio.addEventListener("loadedmetadata",()=>{
+  durationEl.textContent=format(audio.duration);
+});
+
 audio.addEventListener("timeupdate",()=>{
-  if(audio.duration){
+  if(!audio.duration || isNaN(audio.duration)) return;
+
+  if(!isSeeking){
     progress.value=(audio.currentTime/audio.duration)*100;
-    currentTimeEl.textContent=format(audio.currentTime);
-    durationEl.textContent=format(audio.duration);
   }
+
+  currentTimeEl.textContent=format(audio.currentTime);
+  durationEl.textContent=format(audio.duration);
 });
 
 progress.addEventListener("input",()=>{
+  if(!audio.duration || isNaN(audio.duration)) return;
+
+  isSeeking=true;
   audio.currentTime=(progress.value/100)*audio.duration;
 });
 
+progress.addEventListener("change",()=>{
+  isSeeking=false;
+});
+
 function format(s){
-  if(isNaN(s)) return "0:00";
+  if(!s || isNaN(s)) return "0:00";
   const m=Math.floor(s/60);
   const sec=Math.floor(s%60);
   return `${m}:${sec<10?"0":""}${sec}`;
@@ -349,49 +357,8 @@ function render(){
       <button class="del" onclick="remove(${t.id})">Remove</button>
     `;
 
-    div.addEventListener("dragstart",()=>div.classList.add("dragging"));
-    div.addEventListener("dragend",()=>{
-      div.classList.remove("dragging");
-      saveOrder();
-    });
-
     queue.appendChild(div);
   });
-}
-
-/* DRAG SORT */
-queue.addEventListener("dragover",e=>{
-  e.preventDefault();
-
-  const after=getAfter(e.clientY);
-  const dragging=document.querySelector(".dragging");
-
-  if(!after) queue.appendChild(dragging);
-  else queue.insertBefore(dragging,after);
-});
-
-function getAfter(y){
-  const els=[...queue.querySelectorAll(".item:not(.dragging)")];
-
-  return els.reduce((closest,child)=>{
-    const box=child.getBoundingClientRect();
-    const offset=y-box.top-box.height/2;
-
-    if(offset<0 && offset>closest.offset){
-      return {offset,element:child};
-    }
-    return closest;
-  },{offset:-Infinity}).element;
-}
-
-/* SAVE ORDER */
-function saveOrder(){
-  const newOrder=[...queue.querySelectorAll(".item")].map(div=>{
-    const name=div.innerText;
-    return tracks.find(t=>clean(t.name)===name);
-  });
-
-  tracks=newOrder.filter(Boolean);
 }
 
 /* INIT */
