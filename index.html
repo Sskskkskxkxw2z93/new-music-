@@ -3,219 +3,278 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Music</title>
 
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#121212">
+
 <style>
-body {
-  margin:0;
-  font-family: Arial;
-  background:#0b0b0b;
-  color:white;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  padding:20px;
+:root{
+  --bg:#121212;
+  --card:#181818;
+  --card2:#222;
+  --text:#fff;
+  --muted:#b3b3b3;
+  --green:#1db954;
 }
 
-header {
-  width:100%;
-  max-width:500px;
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  font-family:-apple-system,Arial;
+  background:var(--bg);
+  color:var(--text);
+  padding:16px;
+}
+
+/* HEADER */
+header{
   display:flex;
   justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
+}
+
+.logo{
+  font-weight:700;
+  font-size:20px;
+  letter-spacing:0.5px;
+}
+
+.add{
+  background:var(--green);
+  border:none;
+  padding:8px 14px;
+  border-radius:20px;
+  color:#000;
+  font-weight:600;
+}
+
+/* NOW PLAYING */
+.now{
+  background:linear-gradient(145deg,#1e1e1e,#111);
+  border-radius:16px;
+  padding:18px;
+  margin-bottom:14px;
+}
+
+.art{
+  width:100%;
+  aspect-ratio:1;
+  border-radius:14px;
+  background:radial-gradient(circle,#333,#111);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:48px;
+  margin-bottom:10px;
+  position:relative;
+  overflow:hidden;
+}
+
+.vinyl{
+  width:70%;
+  height:70%;
+  border-radius:50%;
+  background:conic-gradient(#111 0 20%, #333 20% 40%, #111 40% 60%, #333 60% 80%, #111 80% 100%);
+  animation:spin 4s linear infinite;
+  display:none;
+}
+
+.playing .vinyl{display:block;}
+
+@keyframes spin{
+  from{transform:rotate(0)}
+  to{transform:rotate(360deg)}
+}
+
+.title{
+  font-size:18px;
+  font-weight:600;
+}
+.sub{
+  font-size:12px;
+  color:var(--muted);
   margin-bottom:10px;
 }
 
-button {
+/* CONTROLS */
+.controls{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+}
+
+.btn{
+  background:#282828;
   border:none;
-  padding:10px 14px;
-  border-radius:10px;
-  background:#1e1e1e;
   color:white;
+  padding:10px 12px;
+  border-radius:50%;
   cursor:pointer;
 }
 
-.primary {
-  background:#ffffff;
+.play{
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  background:var(--green);
   color:#000;
+  font-size:18px;
 }
 
-.player {
-  width:100%;
-  max-width:500px;
-  background:#151515;
-  padding:15px;
-  border-radius:14px;
+/* QUEUE */
+.queue{
+  margin-top:14px;
 }
 
-audio {
-  width:100%;
-  margin-top:10px;
-}
-
-.controls {
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  margin-top:10px;
-}
-
-.list {
-  margin-top:15px;
-  width:100%;
-  max-width:500px;
-}
-
-.item {
+.item{
   display:flex;
   justify-content:space-between;
-  padding:10px;
+  align-items:center;
+  padding:12px;
   margin:6px 0;
-  background:#1e1e1e;
+  background:var(--card);
   border-radius:10px;
+  cursor:pointer;
 }
 
-.item.active {
-  border-left:3px solid #fff;
+.item:hover{
+  background:var(--card2);
 }
 
-.small {
+.item.active{
+  border-left:3px solid var(--green);
+}
+
+.small{
   font-size:12px;
-  opacity:0.6;
+  color:var(--muted);
 }
+
+.del{
+  background:none;
+  border:none;
+  color:#888;
+}
+.del:hover{color:#ff4d4d}
+
+/* hidden input */
+input{display:none;}
 </style>
 </head>
 
 <body>
 
 <header>
-  <h3>Music</h3>
-  <button onclick="file.click()">Add</button>
+  <div class="logo">Music</div>
+  <button class="add" onclick="file.click()">+ Add</button>
 </header>
 
-<div class="player">
+<div class="now" id="now">
 
-<input id="file" type="file" accept="audio/*" multiple>
+  <div class="art">
+    <div class="vinyl"></div>
+  </div>
 
-<audio id="audio"></audio>
+  <div class="title" id="title">No song playing</div>
+  <div class="sub" id="sub">Add music to start</div>
 
-<div class="controls">
-  <button onclick="prev()">Prev</button>
-  <button class="primary" onclick="toggle()" id="playBtn">Play</button>
-  <button onclick="next()">Next</button>
+  <audio id="audio"></audio>
+
+  <div class="controls">
+    <button class="btn" onclick="prev()">⏮</button>
+    <button class="play" onclick="toggle()" id="playBtn">▶</button>
+    <button class="btn" onclick="next()">⏭</button>
+  </div>
+
 </div>
 
-</div>
+<div class="queue" id="queue"></div>
 
-<div class="list" id="list"></div>
+<input type="file" id="file" accept="audio/*,video/mp4,.mp3,.m4a,.wav,.aac" multiple>
 
 <script>
-const file = document.getElementById("file");
-const audio = document.getElementById("audio");
-const list = document.getElementById("list");
-const playBtn = document.getElementById("playBtn");
+const file=document.getElementById("file");
+const audio=document.getElementById("audio");
+const queue=document.getElementById("queue");
+const playBtn=document.getElementById("playBtn");
+const now=document.getElementById("now");
+const title=document.getElementById("title");
+const sub=document.getElementById("sub");
 
-let db;
-let tracks = [];
-let current = 0;
-let playing = false;
+let tracks=JSON.parse(localStorage.getItem("tracks")||"[]");
+let current=0;
+let playing=false;
 
-/* ---------- INIT DB ---------- */
-function openDB(){
-  return new Promise((res)=>{
-    const request = indexedDB.open("musicDB",1);
+/* SAVE */
+function save(){
+  localStorage.setItem("tracks",JSON.stringify(tracks));
+}
 
-    request.onupgradeneeded = e=>{
-      const db = e.target.result;
-      db.createObjectStore("tracks",{keyPath:"id",autoIncrement:true});
-    };
+/* ART TEXT */
+function art(name){
+  title.textContent=name;
+  sub.textContent="Local file";
+}
 
-    request.onsuccess = ()=>res(request.result);
+/* RENDER */
+function render(){
+  queue.innerHTML="";
+
+  tracks.forEach((t,i)=>{
+    const div=document.createElement("div");
+    div.className="item"+(i===current?" active":"");
+
+    div.innerHTML=`
+      <div onclick="play(${i})">
+        ${t.name}
+        <div class="small">track</div>
+      </div>
+      <button class="del" onclick="removeSong(${i})">🗑</button>
+    `;
+
+    queue.appendChild(div);
   });
 }
 
-/* ---------- SAVE FILE ---------- */
-async function saveFile(file){
-  const db = await openDB();
-
-  return new Promise((res)=>{
-    const tx = db.transaction("tracks","readwrite");
-    const store = tx.objectStore("tracks");
-
-    store.add({
-      name:file.name,
-      blob:file
-    });
-
-    tx.oncomplete = ()=>res();
-  });
-}
-
-/* ---------- LOAD FILES ---------- */
-async function loadFiles(){
-  const db = await openDB();
-
-  return new Promise((res)=>{
-    const tx = db.transaction("tracks","readonly");
-    const store = tx.objectStore("tracks");
-
-    const req = store.getAll();
-
-    req.onsuccess = ()=>{
-      tracks = req.result.map(t=>({
-        id:t.id,
-        name:t.name,
-        url:URL.createObjectURL(t.blob)
-      }));
-
-      render();
-      res();
-    };
-  });
-}
-
-/* ---------- FILE INPUT ---------- */
-file.addEventListener("change", async (e)=>{
-  const files=[...e.target.files];
-
-  for(let f of files){
-    await saveFile(f);
-  }
-
-  await loadFiles();
-  play(tracks.length-1);
-});
-
-/* ---------- PLAY ---------- */
+/* PLAY */
 function play(i){
   if(!tracks.length) return;
 
   current=i;
-
   audio.src=tracks[i].url;
   audio.play();
 
   playing=true;
-  playBtn.textContent="Pause";
+  playBtn.textContent="⏸";
+  now.classList.add("playing");
 
+  art(tracks[i].name);
   render();
 }
 
-/* ---------- TOGGLE ---------- */
+/* TOGGLE */
 function toggle(){
   if(!tracks.length) return;
 
   if(playing){
     audio.pause();
     playing=false;
-    playBtn.textContent="Play";
-  } else {
+    playBtn.textContent="▶";
+    now.classList.remove("playing");
+  }else{
     audio.play();
     playing=true;
-    playBtn.textContent="Pause";
+    playBtn.textContent="⏸";
+    now.classList.add("playing");
   }
 }
 
-/* ---------- NEXT / PREV ---------- */
+/* NEXT / PREV */
 function next(){
   if(!tracks.length) return;
   play((current+1)%tracks.length);
@@ -226,43 +285,32 @@ function prev(){
   play((current-1+tracks.length)%tracks.length);
 }
 
-/* ---------- DELETE ---------- */
-async function remove(id){
-  const db = await openDB();
-
-  const tx = db.transaction("tracks","readwrite");
-  tx.objectStore("tracks").delete(id);
-
-  tx.oncomplete = async ()=>{
-    await loadFiles();
-  };
+/* REMOVE */
+function removeSong(i){
+  tracks.splice(i,1);
+  save();
+  render();
 }
 
-/* ---------- RENDER ---------- */
-function render(){
-  list.innerHTML="";
+/* ADD FILES */
+file.addEventListener("change",(e)=>{
+  const files=[...e.target.files];
 
-  tracks.forEach((t,i)=>{
-    const div=document.createElement("div");
-    div.className="item"+(i===current?" active":"");
-
-    div.innerHTML=`
-      <div onclick="play(${i})">
-        ${t.name}
-        <div class="small">local</div>
-      </div>
-      <button onclick="remove(${t.id})">Delete</button>
-    `;
-
-    list.appendChild(div);
+  files.forEach(f=>{
+    const url=URL.createObjectURL(f);
+    tracks.push({name:f.name,url});
   });
-}
 
-/* ---------- AUTO NEXT ---------- */
+  save();
+  render();
+  play(tracks.length-1);
+});
+
+/* AUTO NEXT */
 audio.addEventListener("ended",next);
 
-/* ---------- INIT ---------- */
-loadFiles();
+/* INIT */
+render();
 </script>
 
 </body>
