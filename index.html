@@ -3,12 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Music</title>
-
-<!-- PWA -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#121212">
 
 <style>
 :root{
@@ -40,7 +35,6 @@ header{
 .logo{
   font-weight:700;
   font-size:20px;
-  letter-spacing:0.5px;
 }
 
 .add{
@@ -52,7 +46,7 @@ header{
   font-weight:600;
 }
 
-/* NOW PLAYING */
+/* PLAYER */
 .now{
   background:linear-gradient(145deg,#1e1e1e,#111);
   border-radius:16px;
@@ -68,7 +62,7 @@ header{
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:48px;
+  font-size:42px;
   margin-bottom:10px;
   position:relative;
   overflow:hidden;
@@ -100,30 +94,28 @@ header{
   margin-bottom:10px;
 }
 
-/* CONTROLS */
+/* CONTROLS (CLEAN TEXT BUTTONS) */
 .controls{
   display:flex;
   justify-content:center;
   align-items:center;
-  gap:12px;
+  gap:10px;
 }
 
 .btn{
   background:#282828;
   border:none;
   color:white;
-  padding:10px 12px;
-  border-radius:50%;
+  padding:10px 14px;
+  border-radius:10px;
   cursor:pointer;
+  font-size:13px;
 }
 
 .play{
-  width:56px;
-  height:56px;
-  border-radius:50%;
   background:var(--green);
   color:#000;
-  font-size:18px;
+  font-weight:700;
 }
 
 /* QUEUE */
@@ -158,7 +150,9 @@ header{
 .del{
   background:none;
   border:none;
-  color:#888;
+  color:#aaa;
+  cursor:pointer;
+  font-size:13px;
 }
 .del:hover{color:#ff4d4d}
 
@@ -171,7 +165,7 @@ input{display:none;}
 
 <header>
   <div class="logo">Music</div>
-  <button class="add" onclick="file.click()">+ Add</button>
+  <button class="add" onclick="file.click()">Add</button>
 </header>
 
 <div class="now" id="now">
@@ -185,10 +179,11 @@ input{display:none;}
 
   <audio id="audio"></audio>
 
+  <!-- CLEAN TEXT CONTROLS -->
   <div class="controls">
-    <button class="btn" onclick="prev()">⏮</button>
-    <button class="play" onclick="toggle()" id="playBtn">▶</button>
-    <button class="btn" onclick="next()">⏭</button>
+    <button class="btn" onclick="prev()">Prev</button>
+    <button class="btn play" onclick="toggle()" id="playBtn">Play</button>
+    <button class="btn" onclick="next()">Next</button>
   </div>
 
 </div>
@@ -215,8 +210,8 @@ function save(){
   localStorage.setItem("tracks",JSON.stringify(tracks));
 }
 
-/* ART TEXT */
-function art(name){
+/* ART */
+function setArt(name){
   title.textContent=name;
   sub.textContent="Local file";
 }
@@ -234,7 +229,7 @@ function render(){
         ${t.name}
         <div class="small">track</div>
       </div>
-      <button class="del" onclick="removeSong(${i})">🗑</button>
+      <button class="del" onclick="removeSong(${i})">Remove</button>
     `;
 
     queue.appendChild(div);
@@ -250,10 +245,10 @@ function play(i){
   audio.play();
 
   playing=true;
-  playBtn.textContent="⏸";
+  playBtn.textContent="Pause";
   now.classList.add("playing");
 
-  art(tracks[i].name);
+  setArt(tracks[i].name);
   render();
 }
 
@@ -264,12 +259,12 @@ function toggle(){
   if(playing){
     audio.pause();
     playing=false;
-    playBtn.textContent="▶";
+    playBtn.textContent="Play";
     now.classList.remove("playing");
   }else{
     audio.play();
     playing=true;
-    playBtn.textContent="⏸";
+    playBtn.textContent="Pause";
     now.classList.add("playing");
   }
 }
