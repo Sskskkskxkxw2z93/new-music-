@@ -4,356 +4,826 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Music App</title>
-
+<title>tune.</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Music">
 <meta name="theme-color" content="#0a0a0a">
-
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
 
 :root{
-  --bg:#0a0a0a;
-  --surface:#141414;
-  --card:#1c1c1c;
-  --border:#2a2a2a;
-  --text:#f0f0f0;
-  --muted:#666;
-  --accent:#4a9eff;
-  --accent-dim:#1a3a5c;
-  --danger:#e53935;
+–bg:#0a0a0a;
+–surface:#141414;
+–card:#1c1c1c;
+–border:#2a2a2a;
+–text:#f0f0f0;
+–muted:#666;
+–accent:#4a9eff;
+–accent-dim:#1a3a5c;
+–danger:#e53935;
+–gold:#f5c518;
 }
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 
 body{
-  font-family:'DM Sans',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  min-height:100vh;
-  padding:0 0 40px;
+font-family:‘DM Sans’,sans-serif;
+background:var(–bg);
+color:var(–text);
+min-height:100vh;
+padding:0 0 40px;
 }
 
-/* HEADER */
+/* ── AUTH SCREEN ─────────────────────────── */
+#authScreen{
+position:fixed;inset:0;
+background:var(–bg);
+display:flex;flex-direction:column;
+align-items:center;justify-content:center;
+padding:32px 24px;
+z-index:100;
+}
+
+.auth-logo{font-size:32px;font-weight:700;letter-spacing:-1px;margin-bottom:8px;}
+.auth-logo span{color:var(–accent);}
+.auth-tagline{font-size:13px;color:var(–muted);margin-bottom:40px;}
+
+.auth-card{
+width:100%;max-width:360px;
+background:var(–surface);
+border:1px solid var(–border);
+border-radius:20px;
+padding:28px 24px;
+}
+
+.auth-title{font-size:20px;font-weight:600;margin-bottom:6px;}
+.auth-sub{font-size:13px;color:var(–muted);margin-bottom:24px;}
+
+.field{margin-bottom:14px;}
+.field label{font-size:12px;color:var(–muted);display:block;margin-bottom:6px;font-weight:500;}
+.field input{
+width:100%;background:var(–card);
+border:1px solid var(–border);
+border-radius:10px;padding:12px 14px;
+color:var(–text);font-family:inherit;font-size:14px;
+outline:none;transition:border-color 0.15s;
+}
+.field input:focus{border-color:var(–accent);}
+
+.auth-btn{
+width:100%;padding:13px;border-radius:10px;
+background:var(–accent);border:none;
+color:#fff;font-family:inherit;font-size:15px;
+font-weight:600;cursor:pointer;margin-top:6px;
+transition:opacity 0.15s;
+}
+.auth-btn:active{opacity:0.85;}
+.auth-btn:disabled{opacity:0.5;cursor:default;}
+
+.auth-switch{
+text-align:center;margin-top:20px;
+font-size:13px;color:var(–muted);
+}
+.auth-switch a{color:var(–accent);text-decoration:none;cursor:pointer;}
+
+.auth-err{
+font-size:12px;color:var(–danger);
+text-align:center;margin-top:10px;min-height:18px;
+}
+.auth-ok{
+font-size:12px;color:#4caf50;
+text-align:center;margin-top:10px;min-height:18px;
+}
+
+.forgot-link{
+font-size:12px;color:var(–accent);
+cursor:pointer;text-align:right;
+display:block;margin-top:4px;margin-bottom:16px;
+}
+
+/* ── OVERLAY MODALS ──────────────────────── */
+.overlay{
+position:fixed;inset:0;
+background:rgba(0,0,0,0.75);
+display:flex;align-items:center;justify-content:center;
+padding:24px;z-index:200;
+backdrop-filter:blur(4px);
+}
+.overlay.hidden{display:none;}
+
+.modal{
+width:100%;max-width:340px;
+background:var(–surface);
+border:1px solid var(–border);
+border-radius:24px;
+padding:28px 24px;
+text-align:center;
+}
+
+/* tune Pro modal */
+.pro-badge{
+display:inline-flex;align-items:center;gap:6px;
+background:linear-gradient(135deg,#c8a84b,#f5c518,#c8a84b);
+color:#000;font-weight:700;font-size:12px;
+padding:4px 12px;border-radius:20px;
+margin-bottom:16px;letter-spacing:0.05em;
+}
+
+.pro-title{font-size:22px;font-weight:700;margin-bottom:8px;}
+.pro-price{font-size:32px;font-weight:700;color:var(–accent);margin-bottom:4px;}
+.pro-period{font-size:13px;color:var(–muted);margin-bottom:20px;}
+
+.pro-features{
+text-align:left;
+background:var(–card);
+border-radius:12px;
+padding:16px;
+margin-bottom:24px;
+}
+.pro-feature{
+display:flex;align-items:center;gap:10px;
+font-size:13px;padding:5px 0;color:var(–text);
+}
+.pro-feature .tick{color:#4caf50;font-size:15px;flex-shrink:0;}
+
+.modal-btn{
+width:100%;padding:14px;border-radius:12px;
+font-family:inherit;font-size:15px;font-weight:600;
+cursor:pointer;border:none;margin-bottom:10px;
+transition:opacity 0.15s;
+}
+.modal-btn:active{opacity:0.85;}
+.modal-btn.primary{background:var(–accent);color:#fff;}
+.modal-btn.secondary{background:var(–card);color:var(–muted);border:1px solid var(–border);}
+
+/* Payment modal */
+.pay-title{font-size:18px;font-weight:600;margin-bottom:6px;}
+.pay-sub{font-size:13px;color:var(–muted);margin-bottom:22px;}
+.pay-amount{
+font-size:28px;font-weight:700;color:var(–accent);
+margin-bottom:20px;
+}
+
+.pay-field{margin-bottom:14px;text-align:left;}
+.pay-field label{font-size:12px;color:var(–muted);display:block;margin-bottom:6px;font-weight:500;}
+.pay-field input{
+width:100%;background:var(–card);
+border:1px solid var(–border);
+border-radius:10px;padding:12px 14px;
+color:var(–text);font-family:inherit;font-size:14px;
+outline:none;transition:border-color 0.15s;
+}
+.pay-field input:focus{border-color:var(–accent);}
+
+.pay-row{display:flex;gap:10px;}
+.pay-row .pay-field{flex:1;}
+
+.pay-secure{
+font-size:11px;color:var(–muted);
+display:flex;align-items:center;justify-content:center;
+gap:5px;margin-top:6px;
+}
+
+/* ── MAIN APP ────────────────────────────── */
+#app{display:none;}
+
 header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:20px 20px 12px;
+display:flex;justify-content:space-between;align-items:center;
+padding:20px 20px 12px;
 }
 
-.logo{
-  font-size:22px;
-  font-weight:600;
-  letter-spacing:-0.5px;
+.logo{font-size:22px;font-weight:600;letter-spacing:-0.5px;}
+.logo span{color:var(–accent);}
+
+.header-right{display:flex;align-items:center;gap:10px;}
+
+.user-email{
+font-size:11px;color:var(–muted);
+max-width:130px;overflow:hidden;
+text-overflow:ellipsis;white-space:nowrap;
 }
-.logo span{color:var(--accent);}
+
+.logout-btn{
+font-size:11px;color:var(–muted);
+background:var(–card);border:1px solid var(–border);
+padding:5px 10px;border-radius:20px;cursor:pointer;
+font-family:inherit;white-space:nowrap;
+}
+.logout-btn:active{color:var(–danger);border-color:var(–danger);}
 
 .add-btn{
-  width:36px;height:36px;
-  border-radius:50%;
-  background:var(--card);
-  border:1px solid var(--border);
-  color:var(--text);
-  font-size:22px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  padding-bottom:1px;
+width:36px;height:36px;border-radius:50%;
+background:var(–card);border:1px solid var(–border);
+color:var(–text);font-size:22px;
+display:flex;align-items:center;justify-content:center;
+cursor:pointer;padding-bottom:1px;flex-shrink:0;
 }
 
-/* LABEL */
 .section-label{
-  font-size:11px;
-  font-weight:600;
-  letter-spacing:0.12em;
-  text-transform:uppercase;
-  color:var(--muted);
-  padding:0 20px;
-  margin-bottom:16px;
+font-size:11px;font-weight:600;letter-spacing:0.12em;
+text-transform:uppercase;color:var(–muted);
+padding:0 20px;margin-bottom:16px;
 }
 
-/* ART */
 .art-wrap{padding:0 20px;margin-bottom:20px;}
-
 .art{
-  width:100%;aspect-ratio:1;
-  border-radius:16px;
-  background:var(--surface);
-  border:1px solid var(--border);
-  display:flex;align-items:center;justify-content:center;
-  overflow:hidden;position:relative;
+width:100%;aspect-ratio:1;border-radius:16px;
+background:var(–surface);border:1px solid var(–border);
+display:flex;align-items:center;justify-content:center;
+overflow:hidden;position:relative;
 }
-
 .art-placeholder{
-  display:flex;flex-direction:column;align-items:center;gap:10px;
-  position:absolute;inset:0;justify-content:center;
+display:flex;flex-direction:column;align-items:center;gap:10px;
+position:absolute;inset:0;justify-content:center;
 }
 .art-icon{font-size:48px;opacity:0.15;}
-.art-placeholder p{font-size:13px;color:var(--muted);}
+.art-placeholder p{font-size:13px;color:var(–muted);}
 
-.vinyl-wrap{
-  display:none;align-items:center;justify-content:center;
-  position:absolute;inset:0;
-}
+.vinyl-wrap{display:none;align-items:center;justify-content:center;position:absolute;inset:0;}
 .vinyl-wrap.show{display:flex;}
-
 .vinyl{
-  width:70%;height:70%;border-radius:50%;
-  background:radial-gradient(circle at center,
-    #1a1a1a 0 8%,#333 8% 9%,#1a1a1a 9% 18%,
-    #333 18% 19%,#1a1a1a 19% 28%,#333 28% 29%,#1a1a1a 29% 100%
-  );
-  animation:spin 4s linear infinite;
-  animation-play-state:paused;
-  box-shadow:0 0 60px rgba(0,0,0,0.9);
+width:70%;height:70%;border-radius:50%;
+background:radial-gradient(circle at center,
+#1a1a1a 0 8%,#333 8% 9%,#1a1a1a 9% 18%,
+#333 18% 19%,#1a1a1a 19% 28%,#333 28% 29%,#1a1a1a 29% 100%
+);
+animation:spin 4s linear infinite;animation-play-state:paused;
+box-shadow:0 0 60px rgba(0,0,0,0.9);
 }
 .vinyl.spinning{animation-play-state:running;}
-
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 
-#artImg{
-  width:100%;height:100%;object-fit:cover;
-  position:absolute;inset:0;display:none;
-}
-
-/* TRACK INFO */
 .track-info{padding:0 20px;margin-bottom:4px;}
 .track-title{font-size:18px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;}
-.track-artist{font-size:13px;color:var(--muted);}
+.track-artist{font-size:13px;color:var(–muted);}
 
-/* PROGRESS */
 .progress-section{padding:14px 20px 0;}
-.progress-bar-bg{width:100%;height:3px;background:var(--border);border-radius:2px;margin-bottom:7px;overflow:hidden;}
-.progress-bar-fill{height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width 0.5s linear;}
-.progress-times{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;}
+.progress-bar-bg{width:100%;height:3px;background:var(–border);border-radius:2px;margin-bottom:7px;overflow:hidden;}
+.progress-bar-fill{height:100%;background:var(–accent);border-radius:2px;width:0%;transition:width 0.5s linear;}
+.progress-times{display:flex;justify-content:space-between;font-size:11px;color:var(–muted);font-variant-numeric:tabular-nums;}
 
-/* CONTROLS */
 .controls{display:flex;align-items:center;justify-content:center;gap:20px;padding:22px 20px 8px;}
-
 .ctrl-btn{
-  background:none;border:none;color:var(--muted);
-  cursor:pointer;width:44px;height:44px;
-  border-radius:50%;font-size:20px;
-  display:flex;align-items:center;justify-content:center;
-  position:relative;transition:color 0.15s;
+background:none;border:none;color:var(–muted);
+cursor:pointer;width:44px;height:44px;border-radius:50%;
+display:flex;align-items:center;justify-content:center;
+position:relative;transition:color 0.15s;
 }
-.ctrl-btn:active{color:var(--text);}
-.ctrl-btn.on{color:var(--accent);}
-
+.ctrl-btn:active{color:var(–text);}
+.ctrl-btn.on{color:var(–accent);}
 .ctrl-btn .dot{
-  width:4px;height:4px;border-radius:50%;background:var(--accent);
-  position:absolute;bottom:4px;left:50%;transform:translateX(-50%);
-  display:none;
+width:4px;height:4px;border-radius:50%;background:var(–accent);
+position:absolute;bottom:4px;left:50%;transform:translateX(-50%);display:none;
 }
 .ctrl-btn.on .dot{display:block;}
-
 .play-btn{
-  width:62px;height:62px;border-radius:50%;
-  background:var(--accent);border:none;color:#fff;
-  font-size:22px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 24px rgba(74,158,255,0.4);
-  transition:transform 0.1s,box-shadow 0.1s;
+width:62px;height:62px;border-radius:50%;
+background:var(–accent);border:none;color:#fff;
+cursor:pointer;display:flex;align-items:center;justify-content:center;
+box-shadow:0 4px 24px rgba(74,158,255,0.4);
+transition:transform 0.1s,box-shadow 0.1s;
 }
 .play-btn:active{transform:scale(0.94);box-shadow:0 2px 10px rgba(74,158,255,0.2);}
 
-/* VOLUME */
 .volume-row{display:flex;align-items:center;gap:10px;padding:4px 20px 22px;}
-.vol-icon{font-size:15px;color:var(--muted);}
 .vol-slider{
-  flex:1;-webkit-appearance:none;appearance:none;
-  height:3px;border-radius:2px;background:var(--border);outline:none;cursor:pointer;
+flex:1;-webkit-appearance:none;appearance:none;
+height:3px;border-radius:2px;background:var(–border);outline:none;cursor:pointer;
 }
 .vol-slider::-webkit-slider-thumb{
-  -webkit-appearance:none;width:14px;height:14px;
-  border-radius:50%;background:var(--text);cursor:pointer;
+-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(–text);cursor:pointer;
 }
 
-/* DIVIDER */
-.divider{height:1px;background:var(--border);margin:0 20px 16px;}
+.divider{height:1px;background:var(–border);margin:0 20px 16px;}
 
-/* QUEUE HEADER */
 .queue-header{display:flex;justify-content:space-between;align-items:center;padding:0 20px;margin-bottom:10px;}
 .queue-left{display:flex;align-items:baseline;gap:8px;}
-.queue-label{font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);}
-.track-count{font-size:11px;color:var(--muted);}
+.queue-label{font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(–muted);}
+.track-count{font-size:11px;color:var(–muted);}
 .edit-btn{
-  background:none;border:1px solid var(--border);color:var(--muted);
-  padding:4px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-family:inherit;
+background:none;border:1px solid var(–border);color:var(–muted);
+padding:4px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-family:inherit;
 }
-.edit-btn.active{border-color:var(--accent);color:var(--accent);}
+.edit-btn.active{border-color:var(–accent);color:var(–accent);}
 
-/* QUEUE ITEMS */
 .queue-list{padding:0 20px;}
-
-.item{
-  display:flex;align-items:center;
-  padding:10px 0;border-bottom:1px solid var(--border);
-  gap:12px;user-select:none;
-}
+.item{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(–border);gap:12px;user-select:none;}
 .item:last-child{border-bottom:none;}
 
 .item-thumb{
-  width:42px;height:42px;border-radius:8px;
-  background:var(--card);border:1px solid var(--border);
-  flex-shrink:0;display:flex;align-items:center;justify-content:center;
-  color:var(--muted);overflow:hidden;position:relative;
-  cursor:pointer;
-  transition:border-color 0.15s;
+width:42px;height:42px;border-radius:8px;
+background:var(–card);border:1px solid var(–border);
+flex-shrink:0;display:flex;align-items:center;justify-content:center;
+color:var(–muted);overflow:hidden;position:relative;
+cursor:pointer;transition:border-color 0.15s;
 }
-.item-thumb .thumb-default{ display:flex; }
+.item-thumb .thumb-default{display:flex;}
 .item-thumb .playing-ind{
-  display:none;position:absolute;inset:0;
-  background:rgba(0,0,0,0.0);border-radius:8px;
-  align-items:center;justify-content:center;
-  color:var(--accent);
+display:none;position:absolute;inset:0;border-radius:8px;
+align-items:center;justify-content:center;color:var(–accent);
 }
-.item.now-playing .item-thumb{ border-color:var(--accent); }
-.item.now-playing .item-thumb .thumb-default{ display:none; }
-.item.now-playing .item-thumb .playing-ind{ display:flex; }
+.item.now-playing .item-thumb{border-color:var(–accent);}
+.item.now-playing .item-thumb .thumb-default{display:none;}
+.item.now-playing .item-thumb .playing-ind{display:flex;}
 
 .item-info{flex:1;overflow:hidden;cursor:pointer;}
 .item-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.item.now-playing .item-name{color:var(--accent);}
-.item-dur{font-size:12px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+.item.now-playing .item-name{color:var(–accent);}
+.item-dur{font-size:12px;color:var(–muted);margin-top:2px;font-variant-numeric:tabular-nums;}
 
-/* reorder */
 .reorder-btns{display:none;gap:4px;flex-shrink:0;}
 .editing .reorder-btns{display:flex;}
 .move-btn{
-  background:var(--card);border:1px solid var(--border);color:var(--muted);
-  width:26px;height:26px;border-radius:6px;font-size:12px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
+background:var(–card);border:1px solid var(–border);color:var(–muted);
+width:26px;height:26px;border-radius:6px;font-size:12px;cursor:pointer;
+display:flex;align-items:center;justify-content:center;
 }
-.move-btn:active{background:var(--accent-dim);color:var(--accent);}
+.move-btn:active{background:var(–accent-dim);color:var(–accent);}
 .move-btn:disabled{opacity:0.2;cursor:default;}
 
-/* delete */
 .del{
-  background:none;
-  border:none;
-  color:var(--muted);
-  cursor:pointer;
-  flex-shrink:0;
-  width:30px;height:30px;
-  border-radius:6px;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:0;
-  transition:color 0.15s, background 0.15s;
+background:none;border:none;color:var(–muted);cursor:pointer;
+flex-shrink:0;width:30px;height:30px;border-radius:6px;
+display:none;align-items:center;justify-content:center;padding:0;
+transition:color 0.15s,background 0.15s;
 }
-.del:active{ color:#fff; background:var(--danger); border-radius:6px; }
+.del:active{color:#fff;background:var(–danger);}
 .editing .del{display:flex;}
 
-/* empty */
-.empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px;}
+.empty{text-align:center;padding:40px 20px;color:var(–muted);font-size:14px;}
 .empty-icon{font-size:36px;margin-bottom:10px;opacity:0.25;}
 
-input[type="file"]{display:none;}
+input[type=“file”]{display:none;}
 </style>
 
 </head>
 <body>
 
-<header>
-  <div class="logo">tune<span>.</span></div>
-  <button class="add-btn" onclick="fileInput.click()">+</button>
-</header>
+<!-- ══ AUTH SCREEN ══════════════════════════════ -->
 
-<div class="section-label" id="nowPlayingLabel" style="display:none;">Now Playing</div>
+<div id="authScreen">
+  <div class="auth-logo">tune<span>.</span></div>
+  <div class="auth-tagline">Your music, your way.</div>
 
-<div class="art-wrap">
-  <div class="art">
-    <div class="art-placeholder" id="artPlaceholder">
-      <div class="art-icon">♪</div>
-      <p>No track selected</p>
+  <!-- LOGIN -->
+
+  <div class="auth-card" id="loginCard">
+    <div class="auth-title">Welcome back</div>
+    <div class="auth-sub">Sign in to your account</div>
+    <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email"></div>
+    <div class="field"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"></div>
+    <span class="forgot-link" onclick="showForgot()">Forgot your password?</span>
+    <button class="auth-btn" id="loginBtn" onclick="doLogin()">Sign in</button>
+    <div class="auth-err" id="loginErr"></div>
+    <div class="auth-switch">Don't have an account? <a onclick="showSignup()">Sign up</a></div>
+  </div>
+
+  <!-- SIGNUP -->
+
+  <div class="auth-card" id="signupCard" style="display:none;">
+    <div class="auth-title">Create account</div>
+    <div class="auth-sub">Join tune. today</div>
+    <div class="field"><label>Email</label><input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="email"></div>
+    <div class="field"><label>Password</label><input type="password" id="signupPassword" placeholder="Min. 6 characters" autocomplete="new-password"></div>
+    <div class="field"><label>Confirm password</label><input type="password" id="signupConfirm" placeholder="••••••••" autocomplete="new-password"></div>
+    <button class="auth-btn" id="signupBtn" onclick="doSignup()">Create account</button>
+    <div class="auth-err" id="signupErr"></div>
+    <div class="auth-switch">Already have an account? <a onclick="showLogin()">Sign in</a></div>
+  </div>
+
+  <!-- FORGOT PASSWORD -->
+
+  <div class="auth-card" id="forgotCard" style="display:none;">
+    <div class="auth-title">Reset password</div>
+    <div class="auth-sub">We'll send you a reset link</div>
+    <div class="field"><label>Email</label><input type="email" id="forgotEmail" placeholder="you@example.com" autocomplete="email"></div>
+    <button class="auth-btn" id="forgotBtn" onclick="doForgot()">Send reset link</button>
+    <div class="auth-err" id="forgotErr"></div>
+    <div class="auth-ok" id="forgotOk"></div>
+    <div class="auth-switch"><a onclick="showLogin()">← Back to sign in</a></div>
+  </div>
+</div>
+
+<!-- ══ tune Pro MODAL ═══════════════════════════ -->
+
+<div class="overlay hidden" id="proOverlay">
+  <div class="modal">
+    <div class="pro-badge">★ tune Pro</div>
+    <div class="pro-title">Upgrade your listening</div>
+    <div class="pro-price">99p</div>
+    <div class="pro-period">per month · cancel anytime</div>
+    <div class="pro-features">
+      <div class="pro-feature"><span class="tick">✓</span> Unlimited songs in your queue</div>
+      <div class="pro-feature"><span class="tick">✓</span> Free users limited to 10 songs</div>
+      <div class="pro-feature"><span class="tick">✓</span> Support tune. development</div>
     </div>
-    <div class="vinyl-wrap" id="vinylWrap">
-      <div class="vinyl" id="vinyl"></div>
+    <button class="modal-btn primary" onclick="showPayment()">Get tune Pro — 99p/mo</button>
+    <button class="modal-btn secondary" onclick="closePro()">Maybe later</button>
+  </div>
+</div>
+
+<!-- ══ LIMIT REACHED MODAL ══════════════════════ -->
+
+<div class="overlay hidden" id="limitOverlay">
+  <div class="modal">
+    <div style="font-size:36px;margin-bottom:12px;">🎵</div>
+    <div class="pro-title" style="font-size:18px;margin-bottom:8px;">Queue limit reached</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;">
+      Free accounts can add up to 10 songs. Upgrade to tune Pro for unlimited songs.
+    </div>
+    <button class="modal-btn primary" onclick="showProFromLimit()">Upgrade to tune Pro</button>
+    <button class="modal-btn secondary" onclick="closeLimit()">Keep listening with 10 songs</button>
+  </div>
+</div>
+
+<!-- ══ PAYMENT MODAL ════════════════════════════ -->
+
+<div class="overlay hidden" id="payOverlay">
+  <div class="modal">
+    <div class="pay-title">tune Pro</div>
+    <div class="pay-sub">Enter your card details</div>
+    <div class="pay-amount">£0.99<span style="font-size:14px;color:var(--muted);font-weight:400;"> / month</span></div>
+
+```
+<div class="pay-field">
+  <label>Cardholder name</label>
+  <input type="text" id="payName" placeholder="Name on card" autocomplete="cc-name">
+</div>
+<div class="pay-field">
+  <label>Card number</label>
+  <input type="text" id="payCard" placeholder="1234 5678 9012 3456" maxlength="19" autocomplete="cc-number" oninput="fmtCard(this)">
+</div>
+<div class="pay-row">
+  <div class="pay-field">
+    <label>Expiry</label>
+    <input type="text" id="payExpiry" placeholder="MM/YY" maxlength="5" autocomplete="cc-exp" oninput="fmtExpiry(this)">
+  </div>
+  <div class="pay-field">
+    <label>CVV</label>
+    <input type="text" id="payCvv" placeholder="123" maxlength="4" autocomplete="cc-csc">
+  </div>
+</div>
+
+<div class="auth-err" id="payErr"></div>
+<button class="modal-btn primary" id="payBtn" onclick="doPayment()" style="margin-top:8px;">Subscribe — £0.99/mo</button>
+<button class="modal-btn secondary" onclick="closePayment()">Cancel</button>
+<div class="pay-secure">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  Secured · Stripe
+</div>
+```
+
+  </div>
+</div>
+
+<!-- ══ MAIN APP ══════════════════════════════════ -->
+
+<div id="app">
+  <header>
+    <div class="logo">tune<span>.</span></div>
+    <div class="header-right">
+      <span class="user-email" id="userEmail"></span>
+      <button class="logout-btn" onclick="doLogout()">Log out</button>
+      <button class="add-btn" onclick="onAddClick()">+</button>
+    </div>
+  </header>
+
+  <div class="section-label" id="nowPlayingLabel" style="display:none;">Now Playing</div>
+
+  <div class="art-wrap">
+    <div class="art">
+      <div class="art-placeholder" id="artPlaceholder">
+        <div class="art-icon">♪</div>
+        <p>No track selected</p>
+      </div>
+      <div class="vinyl-wrap" id="vinylWrap">
+        <div class="vinyl" id="vinyl"></div>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="track-info">
-  <div class="track-title" id="trackTitle">Add a track to get started</div>
-  <div class="track-artist" id="trackArtist">&nbsp;</div>
-</div>
-
-<div class="progress-section">
-  <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
-  <div class="progress-times">
-    <span id="currentTime">0:00</span>
-    <span id="duration">0:00</span>
+  <div class="track-info">
+    <div class="track-title" id="trackTitle">Add a track to get started</div>
+    <div class="track-artist" id="trackArtist">&nbsp;</div>
   </div>
-</div>
 
-<div class="controls">
-  <button class="ctrl-btn" id="shuffleBtn" onclick="toggleShuffle()" title="Shuffle">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
-    <span class="dot"></span>
-  </button>
-  <button class="ctrl-btn" onclick="prev()">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
-  </button>
-  <button class="play-btn" id="playBtn" onclick="toggle()">
-    <svg id="playIcon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-  </button>
-  <button class="ctrl-btn" onclick="next()">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-  </button>
-  <button class="ctrl-btn" id="loopBtn" onclick="toggleLoop()" title="Loop">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-    <span class="dot"></span>
-  </button>
-</div>
-
-<div class="volume-row">
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);flex-shrink:0"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
-  <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.01" value="1">
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);flex-shrink:0"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-</div>
-
-<div class="divider"></div>
-
-<div class="queue-header">
-  <div class="queue-left">
-    <span class="queue-label">Queue</span>
-    <span class="track-count" id="trackCount">0 tracks</span>
+  <div class="progress-section">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+    <div class="progress-times">
+      <span id="currentTime">0:00</span>
+      <span id="duration">0:00</span>
+    </div>
   </div>
-  <button class="edit-btn" id="editBtn" onclick="toggleEdit()">Edit</button>
-</div>
 
-<div class="queue-list" id="queueList"></div>
+  <div class="controls">
+    <button class="ctrl-btn" id="shuffleBtn" onclick="toggleShuffle()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+      <span class="dot"></span>
+    </button>
+    <button class="ctrl-btn" onclick="prev()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+    </button>
+    <button class="play-btn" id="playBtn" onclick="toggle()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    </button>
+    <button class="ctrl-btn" onclick="next()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+    </button>
+    <button class="ctrl-btn" id="loopBtn" onclick="toggleLoop()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      <span class="dot"></span>
+    </button>
+  </div>
+
+  <div class="volume-row">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);flex-shrink:0"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
+    <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.01" value="1">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);flex-shrink:0"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="queue-header">
+    <div class="queue-left">
+      <span class="queue-label">Queue</span>
+      <span class="track-count" id="trackCount">0 tracks</span>
+    </div>
+    <button class="edit-btn" id="editBtn" onclick="toggleEdit()">Edit</button>
+  </div>
+
+  <div class="queue-list" id="queueList"></div>
+</div>
 
 <audio id="audio" playsinline></audio>
 <input type="file" id="fileInput" accept="audio/*,.mp3,.m4a,.wav,.aac,.flac" multiple>
 
-<script>
-const audio         = document.getElementById("audio");
-const queueList     = document.getElementById("queueList");
-const trackTitle    = document.getElementById("trackTitle");
-const trackArtist   = document.getElementById("trackArtist");
-const playBtn       = document.getElementById("playBtn");
-const progressFill  = document.getElementById("progressFill");
-const currentTimeEl = document.getElementById("currentTime");
-const durationEl    = document.getElementById("duration");
-const vinyl         = document.getElementById("vinyl");
-const vinylWrap     = document.getElementById("vinylWrap");
-const artPlaceholder= document.getElementById("artPlaceholder");
-const nowPlayingLabel=document.getElementById("nowPlayingLabel");
-const trackCount    = document.getElementById("trackCount");
-const editBtn       = document.getElementById("editBtn");
-const shuffleBtn    = document.getElementById("shuffleBtn");
-const loopBtn       = document.getElementById("loopBtn");
-const volSlider     = document.getElementById("volSlider");
-const fileInput     = document.getElementById("fileInput");
+<!-- Firebase SDK -->
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  sendPasswordResetEmail, signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ╔══════════════════════════════════════════╗
+// ║  PASTE YOUR FIREBASE CONFIG HERE         ║
+// ╚══════════════════════════════════════════╝
+const firebaseConfig = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_AUTH_DOMAIN",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── State ─────────────────────────────────
+let currentUser = null;
+let isPro       = false;
+const FREE_LIMIT = 10;
+
+// ── Auth state listener ───────────────────
+onAuthStateChanged(auth, async user => {
+  if(user){
+    currentUser = user;
+    isPro = await checkPro(user.uid);
+    enterApp(user);
+    if(!isPro) showProModal();
+  } else {
+    currentUser = null;
+    isPro = false;
+    showAuthScreen();
+  }
+});
+
+// ── Check subscription in Firestore ───────
+async function checkPro(uid){
+  try{
+    const snap = await getDoc(doc(db,"users",uid));
+    return snap.exists() && snap.data().isPro === true;
+  }catch(e){ return false; }
+}
+
+// ── Grant Pro in Firestore ────────────────
+async function grantPro(uid){
+  await setDoc(doc(db,"users",uid),{isPro:true},{merge:true});
+  isPro = true;
+}
+
+// ── Show/hide screens ─────────────────────
+function showAuthScreen(){
+  document.getElementById("authScreen").style.display="flex";
+  document.getElementById("app").style.display="none";
+}
+
+function enterApp(user){
+  document.getElementById("authScreen").style.display="none";
+  document.getElementById("app").style.display="block";
+  document.getElementById("userEmail").textContent = user.email;
+  loadFiles();
+}
+
+function showProModal(){
+  document.getElementById("proOverlay").classList.remove("hidden");
+}
+
+// ── Auth card switches ────────────────────
+window.showLogin  = ()=>{ document.getElementById("loginCard").style.display="block"; document.getElementById("signupCard").style.display="none"; document.getElementById("forgotCard").style.display="none"; };
+window.showSignup = ()=>{ document.getElementById("loginCard").style.display="none"; document.getElementById("signupCard").style.display="block"; document.getElementById("forgotCard").style.display="none"; };
+window.showForgot = ()=>{ document.getElementById("loginCard").style.display="none"; document.getElementById("signupCard").style.display="none"; document.getElementById("forgotCard").style.display="block"; };
+
+// ── Login ─────────────────────────────────
+window.doLogin = async ()=>{
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass  = document.getElementById("loginPassword").value;
+  const errEl = document.getElementById("loginErr");
+  const btn   = document.getElementById("loginBtn");
+  errEl.textContent=""; btn.disabled=true; btn.textContent="Signing in…";
+  try{
+    await signInWithEmailAndPassword(auth, email, pass);
+  }catch(e){
+    errEl.textContent = friendlyError(e.code);
+    btn.disabled=false; btn.textContent="Sign in";
+  }
+};
+
+// ── Signup ────────────────────────────────
+window.doSignup = async ()=>{
+  const email   = document.getElementById("signupEmail").value.trim();
+  const pass    = document.getElementById("signupPassword").value;
+  const confirm = document.getElementById("signupConfirm").value;
+  const errEl   = document.getElementById("signupErr");
+  const btn     = document.getElementById("signupBtn");
+  errEl.textContent="";
+  if(pass !== confirm){ errEl.textContent="Passwords don't match."; return; }
+  if(pass.length < 6){ errEl.textContent="Password must be at least 6 characters."; return; }
+  btn.disabled=true; btn.textContent="Creating account…";
+  try{
+    await createUserWithEmailAndPassword(auth, email, pass);
+  }catch(e){
+    errEl.textContent = friendlyError(e.code);
+    btn.disabled=false; btn.textContent="Create account";
+  }
+};
+
+// ── Forgot password ───────────────────────
+window.doForgot = async ()=>{
+  const email = document.getElementById("forgotEmail").value.trim();
+  const errEl = document.getElementById("forgotErr");
+  const okEl  = document.getElementById("forgotOk");
+  const btn   = document.getElementById("forgotBtn");
+  errEl.textContent=""; okEl.textContent="";
+  if(!email){ errEl.textContent="Please enter your email."; return; }
+  btn.disabled=true; btn.textContent="Sending…";
+  try{
+    await sendPasswordResetEmail(auth, email);
+    okEl.textContent="Reset link sent! Check your inbox.";
+    btn.textContent="Sent ✓";
+  }catch(e){
+    errEl.textContent = friendlyError(e.code);
+    btn.disabled=false; btn.textContent="Send reset link";
+  }
+};
+
+// ── Logout ────────────────────────────────
+window.doLogout = async ()=>{
+  audio.pause(); audio.src="";
+  tracks=[]; currentId=null; playing=false;
+  await signOut(auth);
+};
+
+// ── Pro modal ─────────────────────────────
+window.closePro = ()=>{
+  document.getElementById("proOverlay").classList.add("hidden");
+};
+window.showPayment = ()=>{
+  document.getElementById("proOverlay").classList.add("hidden");
+  document.getElementById("payOverlay").classList.remove("hidden");
+};
+window.showProFromLimit = ()=>{
+  document.getElementById("limitOverlay").classList.add("hidden");
+  document.getElementById("proOverlay").classList.remove("hidden");
+};
+window.closeLimit = ()=>{
+  document.getElementById("limitOverlay").classList.add("hidden");
+};
+window.closePayment = ()=>{
+  document.getElementById("payOverlay").classList.add("hidden");
+  document.getElementById("proOverlay").classList.remove("hidden");
+};
+
+// ── Payment (simulated Stripe flow) ───────
+// NOTE: In production, replace this with a real Stripe Checkout Session
+// created on your backend. Never process card details client-side.
+window.doPayment = async ()=>{
+  const name   = document.getElementById("payName").value.trim();
+  const card   = document.getElementById("payCard").value.replace(/\s/g,"");
+  const expiry = document.getElementById("payExpiry").value.trim();
+  const cvv    = document.getElementById("payCvv").value.trim();
+  const errEl  = document.getElementById("payErr");
+  const btn    = document.getElementById("payBtn");
+  errEl.textContent="";
+
+  if(!name)                  { errEl.textContent="Please enter the cardholder name."; return; }
+  if(card.length < 13)       { errEl.textContent="Please enter a valid card number."; return; }
+  if(!/^\d{2}\/\d{2}$/.test(expiry)){ errEl.textContent="Please enter expiry as MM/YY."; return; }
+  if(cvv.length < 3)         { errEl.textContent="Please enter a valid CVV."; return; }
+
+  btn.disabled=true; btn.textContent="Processing…";
+
+  // Simulate payment processing (replace with real Stripe integration)
+  await new Promise(r=>setTimeout(r,1800));
+
+  // Grant Pro
+  await grantPro(currentUser.uid);
+  document.getElementById("payOverlay").classList.add("hidden");
+  btn.disabled=false; btn.textContent="Subscribe — £0.99/mo";
+  showToast("🎉 Welcome to tune Pro!");
+};
+
+// ── Add button with limit check ───────────
+window.onAddClick = ()=>{
+  if(!isPro && tracks.length >= FREE_LIMIT){
+    document.getElementById("limitOverlay").classList.remove("hidden");
+    return;
+  }
+  document.getElementById("fileInput").click();
+};
+
+// ── Card formatters ───────────────────────
+window.fmtCard = el=>{
+  let v = el.value.replace(/\D/g,"").slice(0,16);
+  el.value = v.replace(/(.{4})/g,"$1 ").trim();
+};
+window.fmtExpiry = el=>{
+  let v = el.value.replace(/\D/g,"").slice(0,4);
+  if(v.length>2) v=v.slice(0,2)+"/"+v.slice(2);
+  el.value=v;
+};
+
+// ── Friendly error messages ───────────────
+function friendlyError(code){
+  const map={
+    "auth/invalid-email":           "Please enter a valid email address.",
+    "auth/user-not-found":          "No account found with that email.",
+    "auth/wrong-password":          "Incorrect password. Please try again.",
+    "auth/email-already-in-use":    "An account with this email already exists.",
+    "auth/weak-password":           "Password must be at least 6 characters.",
+    "auth/too-many-requests":       "Too many attempts. Please try again later.",
+    "auth/network-request-failed":  "Network error. Check your connection.",
+    "auth/invalid-credential":      "Incorrect email or password.",
+  };
+  return map[code] || "Something went wrong. Please try again.";
+}
+
+// ── Toast notification ────────────────────
+function showToast(msg){
+  const t=document.createElement("div");
+  t.textContent=msg;
+  Object.assign(t.style,{
+    position:"fixed",bottom:"30px",left:"50%",transform:"translateX(-50%)",
+    background:"#222",color:"#fff",padding:"10px 20px",borderRadius:"20px",
+    fontSize:"13px",fontFamily:"inherit",zIndex:"999",
+    boxShadow:"0 4px 20px rgba(0,0,0,0.5)",
+    transition:"opacity 0.4s"
+  });
+  document.body.appendChild(t);
+  setTimeout(()=>{ t.style.opacity="0"; setTimeout(()=>t.remove(),400); },2500);
+}
+
+// ════════════════════════════════════════════
+// MUSIC PLAYER
+// ════════════════════════════════════════════
+
+const audio          = document.getElementById("audio");
+const queueList      = document.getElementById("queueList");
+const trackTitle     = document.getElementById("trackTitle");
+const trackArtist    = document.getElementById("trackArtist");
+const playBtn        = document.getElementById("playBtn");
+const progressFill   = document.getElementById("progressFill");
+const currentTimeEl  = document.getElementById("currentTime");
+const durationEl     = document.getElementById("duration");
+const vinyl          = document.getElementById("vinyl");
+const vinylWrap      = document.getElementById("vinylWrap");
+const artPlaceholder = document.getElementById("artPlaceholder");
+const nowPlayingLabel= document.getElementById("nowPlayingLabel");
+const trackCount     = document.getElementById("trackCount");
+const editBtn        = document.getElementById("editBtn");
+const shuffleBtn     = document.getElementById("shuffleBtn");
+const loopBtn        = document.getElementById("loopBtn");
+const volSlider      = document.getElementById("volSlider");
+const fileInput      = document.getElementById("fileInput");
 
 let tracks    = [];
 let currentId = null;
@@ -362,25 +832,25 @@ let editMode  = false;
 let shuffle   = false;
 let loop      = false;
 
+const playIconSVG  = `<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+const pauseIconSVG = `<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+
+// ── Media Session ─────────────────────────
 function setupMediaSession(t){
   if(!("mediaSession" in navigator)) return;
-  navigator.mediaSession.metadata = new MediaMetadata({
-    title:  clean(t.name),
-    artist: "",
-    artwork:[]
-  });
+  navigator.mediaSession.metadata = new MediaMetadata({ title:clean(t.name), artist:"", artwork:[] });
   navigator.mediaSession.setActionHandler("play",          ()=>{ audio.play();  setPlaying(true);  });
   navigator.mediaSession.setActionHandler("pause",         ()=>{ audio.pause(); setPlaying(false); });
-  navigator.mediaSession.setActionHandler("previoustrack", prev);
-  navigator.mediaSession.setActionHandler("nexttrack",     next);
+  navigator.mediaSession.setActionHandler("previoustrack", ()=>prev());
+  navigator.mediaSession.setActionHandler("nexttrack",     ()=>next());
 }
 
-/* ── DB ──────────────────────────────────── */
+// ── IndexedDB ────────────────────────────
 function openDB(){
   return new Promise(res=>{
     const req = indexedDB.open("MusicDB",3);
     req.onupgradeneeded = e=>{
-      const db = e.target.result;
+      const db=e.target.result;
       if(!db.objectStoreNames.contains("tracks"))
         db.createObjectStore("tracks",{keyPath:"id",autoIncrement:true});
     };
@@ -403,18 +873,9 @@ async function loadFiles(){
     const tx  = db.transaction("tracks","readonly");
     const req = tx.objectStore("tracks").getAll();
     req.onsuccess = async ()=>{
-      const raw = req.result;
-      tracks = raw.map(t=>({
-        id:   t.id,
-        name: t.name,
-        url:  URL.createObjectURL(t.blob),
-        dur:  null
-      }));
+      tracks = req.result.map(t=>({ id:t.id, name:t.name, url:URL.createObjectURL(t.blob), dur:null }));
       render();
-      // Load durations in background
-      for(const t of tracks){
-        await getDuration(t);
-      }
+      for(const t of tracks) await getDuration(t);
       render();
       res();
     };
@@ -423,227 +884,169 @@ async function loadFiles(){
 
 function getDuration(t){
   return new Promise(res=>{
-    const tmp = new Audio();
-    tmp.preload = "metadata";
-    tmp.src = t.url;
-    tmp.addEventListener("loadedmetadata",()=>{
-      t.dur = tmp.duration;
-      tmp.src = "";
-      res();
-    });
+    const tmp=new Audio(); tmp.preload="metadata"; tmp.src=t.url;
+    tmp.addEventListener("loadedmetadata",()=>{ t.dur=tmp.duration; tmp.src=""; res(); });
     tmp.addEventListener("error",()=>res());
   });
 }
 
-/* ── HELPERS ─────────────────────────────── */
+// ── Helpers ───────────────────────────────
 function clean(n){ return n.replace(/\.[^/.]+$/,""); }
-
 function format(s){
   if(!s||isNaN(s)) return "0:00";
-  const m=Math.floor(s/60), sec=Math.floor(s%60);
+  const m=Math.floor(s/60),sec=Math.floor(s%60);
   return `${m}:${sec<10?"0":""}${sec}`;
 }
 
-const playIconSVG  = `<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
-const pauseIconSVG = `<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
-
 function setPlaying(val){
-  playing = val;
+  playing=val;
   playBtn.innerHTML = val ? pauseIconSVG : playIconSVG;
   val ? vinyl.classList.add("spinning") : vinyl.classList.remove("spinning");
   if("mediaSession" in navigator)
-    navigator.mediaSession.playbackState = val ? "playing" : "paused";
+    navigator.mediaSession.playbackState = val?"playing":"paused";
 }
 
-/* ── PLAYBACK ────────────────────────────── */
-function playById(id){
-  const t = tracks.find(x=>x.id===id);
-  if(!t) return;
-  currentId = id;
-
-  progressFill.style.transition = "none";
-  progressFill.style.width = "0%";
-  currentTimeEl.textContent = "0:00";
-  durationEl.textContent    = "0:00";
-
-  audio.src = t.url;
-  audio.play();
-  setPlaying(true);
-
-  trackTitle.textContent  = clean(t.name);
-  trackArtist.textContent = "";
-
-  artPlaceholder.style.display = "none";
+// ── Playback ──────────────────────────────
+window.playById = id=>{
+  const t=tracks.find(x=>x.id===id); if(!t) return;
+  currentId=id;
+  progressFill.style.transition="none"; progressFill.style.width="0%";
+  currentTimeEl.textContent="0:00"; durationEl.textContent="0:00";
+  audio.src=t.url; audio.play(); setPlaying(true);
+  trackTitle.textContent=clean(t.name); trackArtist.textContent="";
+  artPlaceholder.style.display="none";
   vinylWrap.classList.add("show");
-  nowPlayingLabel.style.display = "block";
+  nowPlayingLabel.style.display="block";
+  setupMediaSession(t); render();
+};
 
-  setupMediaSession(t);
-  render();
-}
-
-function toggle(){
+window.toggle = ()=>{
   if(!tracks.length) return;
   if(!currentId){ playById(tracks[0].id); return; }
   if(playing){ audio.pause(); setPlaying(false); }
   else        { audio.play();  setPlaying(true);  }
-}
+};
 
-function next(){
+window.next = ()=>{
   if(!tracks.length) return;
-  let i = tracks.findIndex(t=>t.id===currentId);
-  if(shuffle){
-    let ni;
-    do{ ni=Math.floor(Math.random()*tracks.length); }while(tracks.length>1&&ni===i);
-    i=ni;
-  } else {
-    i=(i+1)%tracks.length;
-  }
+  let i=tracks.findIndex(t=>t.id===currentId);
+  if(shuffle){ let ni; do{ ni=Math.floor(Math.random()*tracks.length); }while(tracks.length>1&&ni===i); i=ni; }
+  else i=(i+1)%tracks.length;
   playById(tracks[i].id);
-}
+};
 
-function prev(){
+window.prev = ()=>{
   if(!tracks.length) return;
   if(audio.currentTime>3){ audio.currentTime=0; return; }
-  let i = tracks.findIndex(t=>t.id===currentId);
-  i = (i-1+tracks.length)%tracks.length;
+  let i=tracks.findIndex(t=>t.id===currentId);
+  i=(i-1+tracks.length)%tracks.length;
   playById(tracks[i].id);
-}
+};
 
-audio.addEventListener("ended",()=>{ loop ? (audio.currentTime=0,audio.play()) : next(); });
+window.toggleFromQueue = ()=>{
+  if(playing){ audio.pause(); setPlaying(false); }
+  else        { audio.play();  setPlaying(true);  }
+  render();
+};
 
-/* ── PROGRESS (display only) ─────────────── */
+audio.addEventListener("ended",()=>{ loop?(audio.currentTime=0,audio.play()):next(); });
+
 audio.addEventListener("loadedmetadata",()=>{
-  durationEl.textContent = format(audio.duration);
-  const t = tracks.find(x=>x.id===currentId);
-  if(t && !t.dur){ t.dur = audio.duration; render(); }
+  durationEl.textContent=format(audio.duration);
+  const t=tracks.find(x=>x.id===currentId);
+  if(t&&!t.dur){ t.dur=audio.duration; render(); }
 });
 
 audio.addEventListener("timeupdate",()=>{
   if(!audio.duration||isNaN(audio.duration)) return;
-  const pct = (audio.currentTime/audio.duration)*100;
-  progressFill.style.transition = "width 0.5s linear";
-  progressFill.style.width = pct+"%";
-  currentTimeEl.textContent = format(audio.currentTime);
-  durationEl.textContent    = format(audio.duration);
+  const pct=(audio.currentTime/audio.duration)*100;
+  progressFill.style.transition="width 0.5s linear";
+  progressFill.style.width=pct+"%";
+  currentTimeEl.textContent=format(audio.currentTime);
+  durationEl.textContent=format(audio.duration);
 });
 
-/* ── VOLUME ──────────────────────────────── */
 volSlider.addEventListener("input",()=>{ audio.volume=volSlider.value; });
 
-/* ── SHUFFLE / LOOP ──────────────────────── */
-function toggleShuffle(){
-  shuffle=!shuffle;
-  shuffleBtn.classList.toggle("on",shuffle);
-}
-function toggleLoop(){
-  loop=!loop;
-  loopBtn.classList.toggle("on",loop);
-}
+window.toggleShuffle = ()=>{ shuffle=!shuffle; shuffleBtn.classList.toggle("on",shuffle); };
+window.toggleLoop    = ()=>{ loop=!loop;       loopBtn.classList.toggle("on",loop);       };
 
-/* ── DELETE ──────────────────────────────── */
-async function remove(id){
-  const db = await openDB();
+// ── Delete ────────────────────────────────
+window.remove = async id=>{
+  const db=await openDB();
   db.transaction("tracks","readwrite").objectStore("tracks").delete(id);
-  const i = tracks.findIndex(t=>t.id===id);
-  if(i>-1){
-    URL.revokeObjectURL(tracks[i].url);
-    tracks.splice(i,1);
-  }
+  const i=tracks.findIndex(t=>t.id===id);
+  if(i>-1){ URL.revokeObjectURL(tracks[i].url); tracks.splice(i,1); }
   if(currentId===id){
-    audio.pause(); audio.src="";
-    currentId=null; setPlaying(false);
-    trackTitle.textContent  = "Add a track to get started";
-    trackArtist.textContent = "";
-    progressFill.style.width="0%";
-    currentTimeEl.textContent="0:00";
-    durationEl.textContent="0:00";
-    vinylWrap.classList.remove("show");
-    artPlaceholder.style.display="flex";
+    audio.pause(); audio.src=""; currentId=null; setPlaying(false);
+    trackTitle.textContent="Add a track to get started"; trackArtist.textContent="";
+    progressFill.style.width="0%"; currentTimeEl.textContent="0:00"; durationEl.textContent="0:00";
+    vinylWrap.classList.remove("show"); artPlaceholder.style.display="flex";
     nowPlayingLabel.style.display="none";
   }
   render();
-}
+};
 
-/* ── EDIT MODE ───────────────────────────── */
-function toggleEdit(){
+// ── Edit / reorder ────────────────────────
+window.toggleEdit = ()=>{
   editMode=!editMode;
   editBtn.textContent=editMode?"Done":"Edit";
   editBtn.classList.toggle("active",editMode);
   queueList.classList.toggle("editing",editMode);
-}
+};
 
-function moveTrack(idx,dir){
-  const ni=idx+dir;
-  if(ni<0||ni>=tracks.length) return;
+window.moveTrack = (idx,dir)=>{
+  const ni=idx+dir; if(ni<0||ni>=tracks.length) return;
   [tracks[idx],tracks[ni]]=[tracks[ni],tracks[idx]];
-  render();
-  if(editMode) queueList.classList.add("editing");
-}
+  render(); if(editMode) queueList.classList.add("editing");
+};
 
-/* ── TOGGLE FROM QUEUE ───────────────────── */
-function toggleFromQueue(){
-  if(playing){ audio.pause(); setPlaying(false); }
-  else        { audio.play();  setPlaying(true);  }
-  render();
-}
-
-/* ── RENDER ──────────────────────────────── */
+// ── Render ────────────────────────────────
 function render(){
   queueList.innerHTML="";
   trackCount.textContent=`${tracks.length} track${tracks.length!==1?"s":""}`;
-
   if(!tracks.length){
     queueList.innerHTML=`<div class="empty"><div class="empty-icon">♪</div><p>No tracks yet — tap + to get started</p></div>`;
     return;
   }
-
   tracks.forEach((t,idx)=>{
-    const isActive = t.id===currentId;
+    const isActive=t.id===currentId;
     const div=document.createElement("div");
     div.className="item"+(isActive?" now-playing":"");
-
-    const playingSVG = playing && isActive
+    const playingSVG = playing&&isActive
       ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`
       : `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
-
-    const thumbAction = isActive
-      ? `toggleFromQueue()`
-      : `playById(${t.id})`;
-
+    const thumbAction = isActive ? `toggleFromQueue()` : `playById(${t.id})`;
     div.innerHTML=`
       <div class="reorder-btns">
         <button class="move-btn" onclick="moveTrack(${idx},-1)" ${idx===0?"disabled":""}>▲</button>
         <button class="move-btn" onclick="moveTrack(${idx},1)"  ${idx===tracks.length-1?"disabled":""}>▼</button>
       </div>
       <div class="item-thumb" onclick="${thumbAction}">
-        <div class="thumb-default">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-        </div>
+        <div class="thumb-default"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
         <div class="playing-ind">${playingSVG}</div>
       </div>
-      <div class="item-info" onclick="${isActive ? `toggleFromQueue()` : `playById(${t.id})`}">
+      <div class="item-info" onclick="${thumbAction}">
         <div class="item-name">${clean(t.name)}</div>
         <div class="item-dur">${t.dur?format(t.dur):"—"}</div>
       </div>
       <button class="del" onclick="remove(${t.id})">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    `;
-
+      </button>`;
     queueList.appendChild(div);
   });
-
   if(editMode) queueList.classList.add("editing");
 }
 
-/* ── INIT ────────────────────────────────── */
-fileInput.addEventListener("change",async e=>{
-  for(const f of e.target.files) await saveFile(f);
+// ── File input ────────────────────────────
+fileInput.addEventListener("change", async e=>{
+  const remaining = isPro ? Infinity : FREE_LIMIT - tracks.length;
+  const files = Array.from(e.target.files).slice(0, remaining);
+  for(const f of files) await saveFile(f);
   fileInput.value="";
   loadFiles();
 });
 
-loadFiles();
 </script>
 
 </body>
