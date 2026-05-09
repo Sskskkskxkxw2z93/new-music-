@@ -1,9 +1,26 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Music App</title>
+
+<!-- PWA manifest -->
+
+<link rel="manifest" href="manifest.json">
+
+<!-- FIX 1: Safari ignores the manifest for the home screen icon.
+     You MUST declare it here directly. -->
+
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<!-- Safari PWA meta tags -->
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Music">
+<meta name="theme-color" content="#121212">
 
 <style>
 :root{
@@ -66,6 +83,11 @@ header{
   background:
     radial-gradient(circle at center,#111 0 10%,#333 10% 11%,#111 11% 20%,#333 20% 21%,#111 21% 100%);
   animation:spin 3s linear infinite;
+  animation-play-state:paused;
+}
+
+.vinyl.spinning{
+  animation-play-state:running;
 }
 
 @keyframes spin{
@@ -123,21 +145,51 @@ header{
   margin:6px 0;
   background:var(--card);
   border-radius:10px;
-  cursor:grab;
+  cursor:default;
+  user-select:none;
+  transition:opacity 0.15s, background 0.15s;
 }
 
-.item.dragging{opacity:0.5;}
+/* FIX 3: drag-to-reorder styles */
+.item.dragging{
+  opacity:0.4;
+}
+
+.item.drag-over{
+  background:#2a2a2a;
+  outline:2px solid var(--green);
+}
+
+.drag-handle{
+  cursor:grab;
+  color:var(--muted);
+  font-size:18px;
+  padding:0 8px 0 0;
+  flex-shrink:0;
+}
+
+.drag-handle:active{cursor:grabbing;}
+
+.track-name{
+  flex:1;
+  cursor:pointer;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
 
 .del{
   background:none;
   border:none;
   color:#aaa;
   cursor:pointer;
+  flex-shrink:0;
 }
 .del:hover{color:red;}
 
 input[type="file"]{display:none;}
 </style>
+
 </head>
 
 <body>
@@ -149,16 +201,17 @@ input[type="file"]{display:none;}
 
 <div class="now">
 
-  <div class="art"><div class="vinyl"></div></div>
+  <div class="art"><div class="vinyl" id="vinyl"></div></div>
 
   <div class="title" id="title">No song playing</div>
 
-  <audio id="audio"></audio>
+<audio id="audio"></audio>
 
   <!-- PROGRESS -->
+
   <div class="progress-row">
     <span id="currentTime">0:00</span>
-    <input type="range" id="progress" min="0" max="100" value="0">
+    <input type="range" id="progress" min="0" max="100" value="0" step="0.1">
     <span id="duration">0:00</span>
   </div>
 
@@ -175,48 +228,51 @@ input[type="file"]{display:none;}
 <input type="file" id="file" accept="audio/*,.mp3,.m4a,.wav,.aac" multiple>
 
 <script>
-const file=document.getElementById("file");
+const fileInput=document.getElementById("file");
 const audio=document.getElementById("audio");
-const queue=document.getElementById("queue");
-const title=document.getElementById("title");
+const queueEl=document.getElementById("queue");
+const titleEl=document.getElementById("title");
 const playBtn=document.getElementById("playBtn");
-const progress=document.getElementById("progress");
+const progressEl=document.getElementById("progress");
 const currentTimeEl=document.getElementById("currentTime");
 const durationEl=document.getElementById("duration");
+const vinyl=document.getElementById("vinyl");
 
 let tracks=[];
 let currentId=null;
 let playing=false;
-let isSeeking=false;
 
-/* DB */
+/* ── DB ─────────────────────────────────────────── */
 function openDB(){
   return new Promise(res=>{
-    const req=indexedDB.open("MusicDB",1);
+    const req=indexedDB.open("MusicDB",2);
     req.onupgradeneeded=e=>{
-      e.target.result.createObjectStore("tracks",{keyPath:"id",autoIncrement:true});
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains("tracks")){
+        db.createObjectStore("tracks",{keyPath:"id",autoIncrement:true});
+      }
+      if(!db.objectStoreNames.contains("order")){
+        db.createObjectStore("order",{keyPath:"key"});
+      }
     };
     req.onsuccess=()=>res(req.result);
   });
 }
 
-/* SAVE */
-async function saveFile(file){
+async function saveFile(f){
   const db=await openDB();
   return new Promise(res=>{
     const tx=db.transaction("tracks","readwrite");
-    const req=tx.objectStore("tracks").add({name:file.name,blob:file});
+    const req=tx.objectStore("tracks").add({name:f.name,blob:f});
     req.onsuccess=()=>res(req.result);
   });
 }
 
-/* LOAD */
 async function loadFiles(){
   const db=await openDB();
   return new Promise(res=>{
     const tx=db.transaction("tracks","readonly");
     const req=tx.objectStore("tracks").getAll();
-
     req.onsuccess=()=>{
       tracks=req.result.map(t=>({
         id:t.id,
@@ -230,140 +286,170 @@ async function loadFiles(){
   });
 }
 
-/* CLEAN NAME */
-function clean(n){
-  return n.replace(/\.[^/.]+$/,"");
+/* ── HELPERS ────────────────────────────────────── */
+function clean(n){return n.replace(/\.[^/.]+$/,"");}
+
+function format(s){
+  if(!s||isNaN(s)) return "0:00";
+  const m=Math.floor(s/60);
+  const sec=Math.floor(s%60);
+  return `${m}:${sec<10?"0":""}${sec}`;
 }
 
-/* PLAY */
+/* ── PLAYBACK ───────────────────────────────────── */
 function playById(id){
   const t=tracks.find(x=>x.id===id);
   if(!t) return;
-
   currentId=id;
   audio.src=t.url;
   audio.play();
-
   playing=true;
   playBtn.textContent="Pause";
-
-  title.textContent=clean(t.name);
+  titleEl.textContent=clean(t.name);
+  vinyl.classList.add("spinning");
   render();
 }
 
-/* TOGGLE */
 function toggle(){
   if(!tracks.length) return;
-
+  if(!currentId && tracks.length) { playById(tracks[0].id); return; }
   if(playing){
     audio.pause();
     playing=false;
     playBtn.textContent="Play";
+    vinyl.classList.remove("spinning");
   }else{
     audio.play();
     playing=true;
     playBtn.textContent="Pause";
+    vinyl.classList.add("spinning");
   }
 }
 
-/* NEXT / PREV */
 function next(){
+  if(!tracks.length) return;
   let i=tracks.findIndex(t=>t.id===currentId);
   i=(i+1)%tracks.length;
   playById(tracks[i].id);
 }
 
 function prev(){
+  if(!tracks.length) return;
   let i=tracks.findIndex(t=>t.id===currentId);
   i=(i-1+tracks.length)%tracks.length;
   playById(tracks[i].id);
 }
 
-/* PROGRESS FIX (FULLY WORKING) */
+audio.addEventListener("ended",next);
+
+/* ── FIX 2: PROGRESS BAR SEEK ───────────────────
+   • "input" only updates the displayed time label while dragging
+     — it does NOT seek the audio (avoids the Safari stutter).
+   • "change" fires on mouse/touch release — THAT is when we seek. */
+let isSeeking=false;
+
 audio.addEventListener("loadedmetadata",()=>{
   durationEl.textContent=format(audio.duration);
 });
 
 audio.addEventListener("timeupdate",()=>{
-  if(!audio.duration || isNaN(audio.duration)) return;
-
-  if(!isSeeking){
-    progress.value=(audio.currentTime/audio.duration)*100;
-  }
-
+  if(isSeeking) return;          // don't fight the user while they drag
+  if(!audio.duration||isNaN(audio.duration)) return;
+  progressEl.value=(audio.currentTime/audio.duration)*100;
   currentTimeEl.textContent=format(audio.currentTime);
   durationEl.textContent=format(audio.duration);
 });
 
-progress.addEventListener("input",()=>{
-  if(!audio.duration || isNaN(audio.duration)) return;
+progressEl.addEventListener("mousedown",()=>{ isSeeking=true; });
+progressEl.addEventListener("touchstart",()=>{ isSeeking=true; },{passive:true});
 
-  isSeeking=true;
-  audio.currentTime=(progress.value/100)*audio.duration;
+progressEl.addEventListener("input",()=>{
+  // Preview the time label while dragging but don't seek yet
+  if(!audio.duration||isNaN(audio.duration)) return;
+  currentTimeEl.textContent=format((progressEl.value/100)*audio.duration);
 });
 
-progress.addEventListener("change",()=>{
+progressEl.addEventListener("change",()=>{
+  // Seek only when the user releases
+  if(!audio.duration||isNaN(audio.duration)) return;
+  audio.currentTime=(progressEl.value/100)*audio.duration;
   isSeeking=false;
 });
 
-function format(s){
-  if(!s || isNaN(s)) return "0:00";
-  const m=Math.floor(s/60);
-  const sec=Math.floor(s%60);
-  return `${m}:${sec<10?"0":""}${sec}`;
-}
+/* touch devices fire "touchend" then "change"; keep consistent */
+progressEl.addEventListener("touchend",()=>{ isSeeking=false; });
 
-/* DELETE */
+/* ── DELETE ─────────────────────────────────────── */
 async function remove(id){
   const db=await openDB();
   const tx=db.transaction("tracks","readwrite");
   tx.objectStore("tracks").delete(id);
-
   const i=tracks.findIndex(t=>t.id===id);
-
-  if(i>-1){
-    URL.revokeObjectURL(tracks[i].url);
-    tracks.splice(i,1);
-  }
-
+  if(i>-1){URL.revokeObjectURL(tracks[i].url);tracks.splice(i,1);}
   if(currentId===id){
-    audio.pause();
-    audio.src="";
-    currentId=null;
-    playing=false;
-    title.textContent="No song playing";
+    audio.pause();audio.src="";
+    currentId=null;playing=false;
+    titleEl.textContent="No song playing";
     playBtn.textContent="Play";
-    progress.value=0;
+    progressEl.value=0;
     currentTimeEl.textContent="0:00";
     durationEl.textContent="0:00";
+    vinyl.classList.remove("spinning");
   }
-
   render();
 }
 
-/* RENDER */
-function render(){
-  queue.innerHTML="";
+/* ── FIX 3: DRAG-TO-REORDER ─────────────────────── */
+let dragSrcIdx=null;
 
-  tracks.forEach(t=>{
+function render(){
+  queueEl.innerHTML="";
+  tracks.forEach((t,idx)=>{
     const div=document.createElement("div");
     div.className="item";
     div.draggable=true;
+    div.dataset.idx=idx;
 
     div.innerHTML=`
-      <div onclick="playById(${t.id})">
-        ${clean(t.name)}
-      </div>
+      <span class="drag-handle" title="Drag to reorder">⠿</span>
+      <span class="track-name" onclick="playById(${t.id})">${clean(t.name)}</span>
       <button class="del" onclick="remove(${t.id})">Remove</button>
     `;
 
-    queue.appendChild(div);
+    /* drag events */
+    div.addEventListener("dragstart",e=>{
+      dragSrcIdx=idx;
+      div.classList.add("dragging");
+      e.dataTransfer.effectAllowed="move";
+    });
+    div.addEventListener("dragend",()=>{
+      div.classList.remove("dragging");
+      document.querySelectorAll(".item").forEach(el=>el.classList.remove("drag-over"));
+    });
+    div.addEventListener("dragover",e=>{
+      e.preventDefault();
+      e.dataTransfer.dropEffect="move";
+      document.querySelectorAll(".item").forEach(el=>el.classList.remove("drag-over"));
+      div.classList.add("drag-over");
+    });
+    div.addEventListener("drop",e=>{
+      e.preventDefault();
+      if(dragSrcIdx===null||dragSrcIdx===idx) return;
+      // Reorder the array
+      const moved=tracks.splice(dragSrcIdx,1)[0];
+      tracks.splice(idx,0,moved);
+      dragSrcIdx=null;
+      render();
+    });
+
+    queueEl.appendChild(div);
   });
 }
 
-/* INIT */
-file.addEventListener("change",async e=>{
-  for(let f of e.target.files) await saveFile(f);
+/* ── INIT ───────────────────────────────────────── */
+fileInput.addEventListener("change",async e=>{
+  for(const f of e.target.files) await saveFile(f);
+  fileInput.value="";
   loadFiles();
 });
 
