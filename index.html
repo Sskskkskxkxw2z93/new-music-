@@ -159,13 +159,24 @@ header{
 }
 
 .del{
-  background:none;
+  background:#e53935;
   border:none;
-  color:#aaa;
+  color:#fff;
   cursor:pointer;
   flex-shrink:0;
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  font-size:14px;
+  line-height:1;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  padding:0;
 }
-.del:hover{color:red;}
+
+.editing .del{display:flex;}
 
 /* EDIT MODE */
 .queue-header{
@@ -200,7 +211,7 @@ header{
 .reorder-btns{
   display:none;
   gap:4px;
-  margin-left:8px;
+  margin-right:8px;
   flex-shrink:0;
 }
 
@@ -242,11 +253,11 @@ input[type="file"]{display:none;}
 
 <audio id="audio"></audio>
 
-  <!-- PROGRESS -->
+  <!-- PROGRESS (display only, no seeking) -->
 
   <div class="progress-row">
     <span id="currentTime">0:00</span>
-    <input type="range" id="progress" min="0" max="100" value="0" step="0.1">
+    <input type="range" id="progress" min="0" max="100" value="0" step="0.1" style="pointer-events:none;">
     <span id="duration">0:00</span>
   </div>
 
@@ -342,8 +353,7 @@ function playById(id){
   if(!t) return;
   currentId=id;
 
-  // Reset seek state so the progress bar works fresh on every song
-  isSeeking=false;
+  // Reset progress bar on new song
   progressEl.value=0;
   currentTimeEl.textContent="0:00";
   durationEl.textContent="0:00";
@@ -389,42 +399,17 @@ function prev(){
 
 audio.addEventListener("ended",next);
 
-/* ── FIX 2: PROGRESS BAR SEEK ───────────────────
-   • "input" only updates the displayed time label while dragging
-     — it does NOT seek the audio (avoids the Safari stutter).
-   • "change" fires on mouse/touch release — THAT is when we seek. */
-let isSeeking=false;
-
+/* ── PROGRESS BAR (display only) ───────────────── */
 audio.addEventListener("loadedmetadata",()=>{
   durationEl.textContent=format(audio.duration);
 });
 
 audio.addEventListener("timeupdate",()=>{
-  if(isSeeking) return;          // don't fight the user while they drag
   if(!audio.duration||isNaN(audio.duration)) return;
   progressEl.value=(audio.currentTime/audio.duration)*100;
   currentTimeEl.textContent=format(audio.currentTime);
   durationEl.textContent=format(audio.duration);
 });
-
-progressEl.addEventListener("mousedown",()=>{ isSeeking=true; });
-progressEl.addEventListener("touchstart",()=>{ isSeeking=true; },{passive:true});
-
-progressEl.addEventListener("input",()=>{
-  // Preview the time label while dragging but don't seek yet
-  if(!audio.duration||isNaN(audio.duration)) return;
-  currentTimeEl.textContent=format((progressEl.value/100)*audio.duration);
-});
-
-progressEl.addEventListener("change",()=>{
-  // Seek only when the user releases
-  if(!audio.duration||isNaN(audio.duration)) return;
-  audio.currentTime=(progressEl.value/100)*audio.duration;
-  isSeeking=false;
-});
-
-/* touch devices fire "touchend" then "change"; keep consistent */
-progressEl.addEventListener("touchend",()=>{ isSeeking=false; });
 
 /* ── DELETE ─────────────────────────────────────── */
 async function remove(id){
@@ -476,12 +461,12 @@ function render(){
     div.className="item";
 
     div.innerHTML=`
-      <span class="track-name" onclick="playById(${t.id})">${clean(t.name)}</span>
       <div class="reorder-btns">
         <button class="move-btn" onclick="moveTrack(${idx},-1)" ${idx===0?"disabled":""}>▲</button>
         <button class="move-btn" onclick="moveTrack(${idx},1)" ${idx===tracks.length-1?"disabled":""}>▼</button>
       </div>
-      <button class="del" onclick="remove(${t.id})">Remove</button>
+      <span class="track-name" onclick="playById(${t.id})">${clean(t.name)}</span>
+      <button class="del" onclick="remove(${t.id})">×</button>
     `;
 
     queueEl.appendChild(div);
